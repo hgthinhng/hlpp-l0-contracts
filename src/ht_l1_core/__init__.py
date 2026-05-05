@@ -10,6 +10,7 @@ from .schema.provenance import BronzeProvenanceSchema, _BronzeProvenanceMixin
 from .schema.vintage import VintageSchema, _VintageMixin
 from .sources_config import SourceEntry, load_sources_yaml
 from .idempotency import idempotent_insert, sha256_url
+from .stamping import stamp_for_bronze
 
 __all__ = [
     "BaseCollector",
@@ -32,4 +33,5 @@ __all__ = [
     "SourceEntry",
     "sha256_url",
     "idempotent_insert",
+    "stamp_for_bronze",
 ]

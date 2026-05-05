@@ -10,6 +10,7 @@ from ht_l1_core.schema.lineage import LineageSchema, _LineageMixin
 from ht_l1_core.schema.provenance import BronzeProvenanceSchema, _BronzeProvenanceMixin
 from ht_l1_core.schema.vintage import VintageSchema, _VintageMixin
 from ht_l1_core.sources_config import SourceEntry, load_sources_yaml
+from ht_l1_core.stamping import stamp_for_bronze
 
 
 def test_top_level_package_reexports_public_api() -> None:
@@ -34,6 +35,7 @@ def test_top_level_package_reexports_public_api() -> None:
         "SourceEntry": SourceEntry,
         "sha256_url": sha256_url,
         "idempotent_insert": idempotent_insert,
+        "stamp_for_bronze": stamp_for_bronze,
     }
 
     assert ht_l1_core.__all__ == list(expected_exports)

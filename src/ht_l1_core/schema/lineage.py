@@ -1,13 +1,13 @@
 """Silver-builder lineage columns as a SQLAlchemy declarative mixin and Pandera schema.
 
-Exports ``_LineageMixin`` (run_id, code_sha, inputs_hash, as_of_date, computed_at)
+Exports ``_LineageMixin`` (run_id, code_sha, inputs_hash, computed_at)
 and ``LineageSchema`` (Pandera DataFrameSchema for validation).
 """
 
-from datetime import date, datetime
+from datetime import datetime
 
 import pandera.pandas as pa
-from sqlalchemy import Date, String, TIMESTAMP
+from sqlalchemy import String, TIMESTAMP
 from sqlalchemy.orm import Mapped, declarative_mixin, mapped_column
 
 
@@ -21,7 +21,6 @@ class _LineageMixin:
     run_id: Mapped[str] = mapped_column(String, nullable=False)
     code_sha: Mapped[str] = mapped_column(String, nullable=False)
     inputs_hash: Mapped[str] = mapped_column(String, nullable=False)
-    as_of_date: Mapped[date] = mapped_column(Date, nullable=False)
     computed_at: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
 
 
@@ -35,7 +34,6 @@ LineageSchema = pa.DataFrameSchema(
             required=True,
         ),
         "inputs_hash": pa.Column(pa.String, nullable=False, required=True),
-        "as_of_date": pa.Column(pa.Date, nullable=False, required=True),
         "computed_at": pa.Column(pa.DateTime, nullable=False, required=True),
     },
     strict=True,

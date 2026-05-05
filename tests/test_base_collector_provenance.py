@@ -34,9 +34,9 @@ def test_collect_auto_stamps_required_provenance_lineage_and_vintage_columns(
         "run_id",
         "code_sha",
         "inputs_hash",
-        "as_of_date",
         "computed_at",
         "vintage",
+        "as_of_date",
         "status",
         "revision_count",
     ]
