@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ht-l1-core"
 version = "0.1.2"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "tenacity",
     "httpx",
