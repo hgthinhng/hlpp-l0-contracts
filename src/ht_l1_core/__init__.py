@@ -5,6 +5,11 @@ from .llm.provider import AIProvider, AIResponse, ProviderChain
 from .llm.usage import AIUsage, UsageRecord
 from .llm.budget import BudgetExceeded, CostBudgetGuard
 from .http import HttpClient
+from .schema.crawler_base import (
+    CRAWLER_BASE_COLUMNS,
+    CrawlerBaseSchema,
+    _CrawlerBaseMixin,
+)
 from .schema.lineage import LineageSchema, _LineageMixin
 from .schema.provenance import BronzeProvenanceSchema, _BronzeProvenanceMixin
 from .schema.vintage import VintageSchema, _VintageMixin
@@ -29,6 +34,9 @@ __all__ = [
     "LineageSchema",
     "_VintageMixin",
     "VintageSchema",
+    "_CrawlerBaseMixin",
+    "CrawlerBaseSchema",
+    "CRAWLER_BASE_COLUMNS",
     "load_sources_yaml",
     "SourceEntry",
     "sha256_url",

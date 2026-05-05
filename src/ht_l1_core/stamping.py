@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Hashable
 from datetime import UTC, date, datetime
 import hashlib
 import json
@@ -61,7 +62,7 @@ def _utc_now() -> datetime:
     return datetime.now(UTC).replace(tzinfo=None)
 
 
-def _sha256_row(row: dict[str, Any]) -> str:
+def _sha256_row(row: dict[Hashable, Any]) -> str:
     payload = json.dumps(
         _jsonable(row),
         separators=(",", ":"),

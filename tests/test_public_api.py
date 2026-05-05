@@ -6,6 +6,11 @@ from ht_l1_core.idempotency import idempotent_insert, sha256_url
 from ht_l1_core.llm.budget import BudgetExceeded, CostBudgetGuard
 from ht_l1_core.llm.provider import AIProvider, AIResponse, ProviderChain
 from ht_l1_core.llm.usage import AIUsage, UsageRecord
+from ht_l1_core.schema.crawler_base import (
+    CRAWLER_BASE_COLUMNS,
+    CrawlerBaseSchema,
+    _CrawlerBaseMixin,
+)
 from ht_l1_core.schema.lineage import LineageSchema, _LineageMixin
 from ht_l1_core.schema.provenance import BronzeProvenanceSchema, _BronzeProvenanceMixin
 from ht_l1_core.schema.vintage import VintageSchema, _VintageMixin
@@ -31,6 +36,9 @@ def test_top_level_package_reexports_public_api() -> None:
         "LineageSchema": LineageSchema,
         "_VintageMixin": _VintageMixin,
         "VintageSchema": VintageSchema,
+        "_CrawlerBaseMixin": _CrawlerBaseMixin,
+        "CrawlerBaseSchema": CrawlerBaseSchema,
+        "CRAWLER_BASE_COLUMNS": CRAWLER_BASE_COLUMNS,
         "load_sources_yaml": load_sources_yaml,
         "SourceEntry": SourceEntry,
         "sha256_url": sha256_url,
