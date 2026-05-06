@@ -3,7 +3,7 @@
 Composes ``_BronzeProvenanceMixin`` + ``_VintageMixin`` + ``_LineageMixin`` and
 adds the 5 ToS/extraction-risk fields per ADR-002 amendment 2026-05-05 FX-9.
 All 3 Wave-3 crawler m12 contracts (m12-newscrawlers-articles-v1,
-m12-macrocrawlers-timeseries-v1, m12-researchcrawlers-reports-v1) MUST inherit
+m12-macrodata-timeseries-v1, m12-researchcrawlers-reports-v1) MUST inherit
 this mixin / extend this Pandera schema.
 """
 
