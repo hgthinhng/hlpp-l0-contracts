@@ -17,7 +17,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _HOME = Path.home()
 _DEPENDENT_REPOS = (
     _HOME / "NewsCrawlers",
-    _HOME / "MacroCrawlers",
+    _HOME / "MacroDataCrawlers",
     _HOME / "vnstock-adapters",
     _HOME / "fqx-adapters",
     _HOME / "cross-market-adapters",
@@ -46,7 +46,7 @@ _SPEC_PAYLOAD_FIELDS = {
         "summary",
         "language",
     ),
-    "m12-macrocrawlers-timeseries-v1": (
+    "m12-macrodata-timeseries-v1": (
         "indicator",
         "period",
         "value",
