@@ -53,5 +53,8 @@ class Backfillable(Protocol):
     """Collector contract for sources that honor an explicit target year."""
 
     def backfill(self, *, target_year: int, **kw: object) -> BackfillResult:
-        """Backfill the requested year or raise BackfillTargetYearUnavailable."""
+        """Backfill the requested year or raise BackfillTargetYearUnavailable.
+
+        Additional collector-specific kwargs may be passed through ``kw``.
+        """
         ...

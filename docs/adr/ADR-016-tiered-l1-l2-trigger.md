@@ -1,6 +1,8 @@
 ## §4 ADR-016 LOCK — Tiered L1→L2 Trigger (LOAD-BEARING)
 
-**Decision**: HTAP L1→L2 trigger transport is partitioned into 5 tiers. ht-l1-core 0.1.4 ships the protocol contracts; per-repo collectors implement the tier they belong to.
+**Decision**: HTAP L1→L2 trigger transport is partitioned into 5 tiers. ht-l1-core 0.1.5 ships the protocol contracts; per-repo collectors implement the tier they belong to.
+
+**Notation**: §4 is the Wave 5 plan section that locks the trigger-transport doctrine. P1 means operator pushback on hourly-latency polling; D1 means data-cadence diversity requires tier-specific transports. F12-A is the Wave 1 target-year backfill contract; D9 is the research-report daily-fresh route.
 
 **Tier matrix** (canonical — copy into `ht-l1-core/docs/adr/ADR-016-tiered-l1-l2-trigger.md`):
 
@@ -12,19 +14,24 @@
 | **D** | `m12-bctcshallow-financials-{general,bank,securities,insurance,fund}-v1`, `m12-vnstock-fundamental-{statements,ratios}-v1`, `m12-vnstock-macro-{cpi,gdp,fx,policy-rate}-v1`, `m12-vnstock-listing-snapshot-v1`, `m12-cross-market-yf-quotes-v1`, `m12-cross-market-yf-vix-v1`, `m12-macrodata-timeseries-v1` | watermark-pull cron daily | daily-fresh OK |
 | **E** | `m12-vnstock-news-v1`, `m12-vnstock-company-news-v1`, future earnings-event feed | event bus (Redis stream / Postgres LISTEN / WebSocket) | sub-minute |
 
-**Drivers**: P1, D1.
+**Drivers**: P1 (operator pushback on hourly-latency polling), D1 (data-cadence diversity requires tier-specific transports).
 
 **Alternatives considered**: universal cron 1h (rejected — D1); push-everything WebSocket (rejected — overkill for D); naive file-tail (rejected — no resume on consumer restart).
 
-**Why chosen**: tiered transport matches data cadence; reuses existing `last_consumed_at` (FX-1, Wave 1) for C/D resume; tier A is the only new daemon (single-purpose); SQLite ring gives free durability + multi-process safety for dev/MVP.
+**Why chosen**:
+
+- Tiered transport matches each source's data cadence.
+- Existing `last_consumed_at` (FX-1, Wave 1) covers C/D resume without a new mechanism.
+- Tier A is the only new daemon and stays single-purpose.
+- SQLite ring storage gives free durability and multi-process safety for dev/MVP.
 
 **Consequences**:
 
-- ht-l1-core 0.1.4 ships 2 new protocols: `Backfillable` (codifies F12-A target_year honor) and `TierAStreamConsumer` (callback signature + start/stop lifecycle).
+- ht-l1-core 0.1.5 ships 2 protocol families: `Backfillable` (codifies F12-A target_year honor) and `TierAStreamConsumer` + `TierAStreamSession` + `BarData` (callback payload + start/stop lifecycle).
 - bctc-shallow-crawlers / vnstock-adapters / cross-market-adapters / MacroDataCrawlers all stay tier C or D. No streaming collectors needed in Wave 5.0.
 - fqx-adapters gains 1 streaming collector (`realtime.py`) + 7 batch collectors stay tier C.
-- L2 silver-builders in future Wave 5.x must declare which tier they consume (impacts m12 read pattern: file-tail vs hot-buffer-poll).
-- ResearchCrawlers' D9 router stays as-is (already tier D — research reports daily-fresh).
+- L2 silver-builders in future Wave 5.x must declare which tier they consume. Tier A uses hot-buffer poll/callback; tiers C/D use watermark-pull via `last_consumed_at`. Legacy file-tail is rejected for trigger transport.
+- ResearchCrawlers' D9 router stays as-is (D9 = research-report daily-fresh route; already tier D).
 
 **Follow-ups (post-Wave-5)**:
 

@@ -7,16 +7,16 @@ import tomllib
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_pyproject_version_is_0_1_4() -> None:
+def test_pyproject_version_is_0_1_5() -> None:
     pyproject = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())
 
-    assert pyproject["project"]["version"] == "0.1.4"
+    assert pyproject["project"]["version"] == "0.1.5"
 
 
-def test_changelog_records_0_1_4_protocol_release() -> None:
+def test_changelog_records_0_1_5_protocol_release() -> None:
     changelog = (PROJECT_ROOT / "CHANGELOG.md").read_text()
 
-    assert "## 0.1.4 - 2026-05-07" in changelog
+    assert "## 0.1.5 - 2026-05-07" in changelog
     assert "Backfillable" in changelog
     assert "TierAStreamConsumer" in changelog
     assert "ADR-016" in changelog

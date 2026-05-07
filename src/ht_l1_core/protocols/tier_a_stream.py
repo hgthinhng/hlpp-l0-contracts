@@ -10,7 +10,10 @@ from typing import Protocol, TypeAlias, runtime_checkable
 
 @dataclass(frozen=True)
 class BarData:
-    """One Tier-A trading observation delivered to a stream callback."""
+    """One Tier-A trading observation delivered to a stream callback.
+
+    ``observed_at`` must be timezone-aware.
+    """
 
     ticker: str
     observed_at: datetime
@@ -31,11 +34,15 @@ class TierAStreamSession(Protocol):
     """Start/stop lifecycle for an active Tier-A stream session."""
 
     def start(self) -> None:
-        """Start or resume the stream session."""
+        """Start or resume the stream session idempotently.
+
+        A session returned by ``TierAStreamConsumer.start`` is already active; callers use this
+        method only to resume a paused/stopped session when an implementation supports resume.
+        """
         ...
 
     def stop(self) -> None:
-        """Stop the stream session and release transport resources."""
+        """Stop the stream session and release its transport resources idempotently."""
         ...
 
 
@@ -44,9 +51,14 @@ class TierAStreamConsumer(Protocol):
     """Consumer capable of starting a Tier-A trading stream."""
 
     def start(self, tickers: Sequence[str], callback: BarCallback) -> TierAStreamSession:
-        """Start streaming tickers and deliver each observation to callback."""
+        """Create and start a session for tickers, delivering each observation to callback.
+
+        This is a factory-plus-auto-start contract: the returned ``TierAStreamSession`` is
+        active before the method returns, so callers must not call ``session.start`` as part of
+        normal setup.
+        """
         ...
 
     def stop(self) -> None:
-        """Stop the current stream session."""
+        """Stop the current session, if any, and release consumer resources idempotently."""
         ...
