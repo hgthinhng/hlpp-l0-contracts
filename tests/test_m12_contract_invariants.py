@@ -54,6 +54,17 @@ _SPEC_PAYLOAD_FIELDS = {
         "region",
         "policy_event_type",
     ),
+    "m12-vnbond-timeseries-v1": (
+        "dataset",
+        "metric",
+        "period",
+        "value",
+        "frequency",
+        "market",
+        "tenor",
+        "bond_code",
+        "unit",
+    ),
 }
 
 
