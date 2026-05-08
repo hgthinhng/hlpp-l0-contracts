@@ -41,7 +41,7 @@ def stamp_for_bronze(
     stamped["source_fetched_at"] = source_fetched_at
     stamped["ingested_at"] = resolved_ingested_at
     stamped["content_hash"] = (
-        [_sha256_row(row) for row in source_rows]
+        pd.array([_sha256_row(row) for row in source_rows], dtype=pd.StringDtype())
         if content_hash is None
         else content_hash
     )
