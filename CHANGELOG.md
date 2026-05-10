@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.9 - 2026-05-10
+
+- feat(L1-W6.JB6.a + JB4): Backfillable Protocol + SourceStatus enum + emit_skipped_row helper
+- Added `ht_l1_core.backfillable` module with `@backfillable_check` decorator that wraps
+  collector methods and raises `RuntimeError` when all returned rows have today's date instead
+  of the requested `target_year` (anti-reestamp guard).  Re-exports `Backfillable`,
+  `BackfillResult`, `BackfillTargetYearUnavailable` from `ht_l1_core.protocols`.
+- Added `ht_l1_core.source_status` module with `SourceStatus` (`StrEnum`: ACTIVE,
+  EXTERNAL_DEAD, EXPERIMENTAL), `SourceManifestEntry` dataclass, and `emit_skipped_row`
+  helper that returns a 20-col `CrawlerBaseSchema`-shaped row with `status="SKIPPED"`.
+  Loud WARNING log fires whenever `status=EXTERNAL_DEAD` per loud-fail discipline.
+
 ## 0.1.8 - 2026-05-10
 
 - Removed the silent `metadata.version()` fallback from `_code_sha`. When git checkout
