@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.8 - 2026-05-10
+
+- Removed the silent `metadata.version()` fallback from `_code_sha`. When git checkout
+  detection fails and `HT_CODE_SHA` is unset, provenance stamping now raises a loud
+  `RuntimeError` instead of writing parquet with a stale package version.
+
 ## 0.1.7 - 2026-05-10
 
 - **MAJOR fix (Codex):** `BrowserFetchClient` default timeout raised from 30 s → 45 s.

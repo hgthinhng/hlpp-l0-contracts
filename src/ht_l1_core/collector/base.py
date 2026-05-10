@@ -17,7 +17,6 @@ from abc import ABC
 from collections.abc import Awaitable
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
-from importlib import metadata
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +25,6 @@ from ht_l1_core.schema.provenance import _BronzeProvenanceMixin
 from ht_l1_core.schema.vintage import _VintageMixin
 
 log = logging.getLogger(__name__)
-_PACKAGE_NAME = "ht-l1-core"
 
 CollectResult = list["RawArticle"] | Awaitable[list["RawArticle"]]
 
@@ -183,14 +181,10 @@ def _code_sha() -> str:
         if env_sha:
             return env_sha
 
-        try:
-            return metadata.version(_PACKAGE_NAME)
-        except metadata.PackageNotFoundError as exc:
-            raise RuntimeError(
-                "Unable to determine code SHA: git rev-parse HEAD failed, "
-                "HT_CODE_SHA is unset, and package metadata for "
-                f"{_PACKAGE_NAME!r} is unavailable."
-            ) from exc
+        raise RuntimeError(
+            "code_sha unavailable; refusing to write parquet — set HT_CODE_SHA env var "
+            "or run from git checkout"
+        )
 
     sha = result.stdout.strip()
     if len(sha) == 40 and all(char in "0123456789abcdef" for char in sha):

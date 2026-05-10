@@ -1,5 +1,4 @@
 import asyncio
-from importlib import metadata as importlib_metadata
 from pathlib import Path
 import sys
 
@@ -68,20 +67,7 @@ def test_code_sha_uses_explicit_env_fallback_when_git_is_unavailable(
 
     assert base_module._code_sha() == "b" * 40
 
-def test_code_sha_uses_package_version_when_git_and_env_are_unavailable(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        base_module.subprocess,
-        "run",
-        lambda *args, **kwargs: (_ for _ in ()).throw(OSError("git unavailable")),
-    )
-    monkeypatch.delenv("HT_CODE_SHA", raising=False)
-    monkeypatch.setattr(importlib_metadata, "version", lambda package: "0.0.1+local")
-
-    assert base_module._code_sha() == "0.0.1+local"
-
-def test_code_sha_raises_when_no_code_identity_is_available(
+def test_code_sha_raises_when_git_and_env_are_unavailable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
@@ -91,10 +77,9 @@ def test_code_sha_raises_when_no_code_identity_is_available(
     )
     monkeypatch.delenv("HT_CODE_SHA", raising=False)
 
-    def raise_missing_package(package: str) -> str:
-        raise importlib_metadata.PackageNotFoundError(package)
-
-    monkeypatch.setattr(importlib_metadata, "version", raise_missing_package)
-
-    with pytest.raises(RuntimeError, match="Unable to determine code SHA"):
+    message = (
+        "code_sha unavailable; refusing to write parquet — set HT_CODE_SHA env var "
+        "or run from git checkout"
+    )
+    with pytest.raises(RuntimeError, match=message):
         base_module._code_sha()
