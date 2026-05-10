@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.7 - 2026-05-10
+
+- **MAJOR fix (Codex):** `BrowserFetchClient` default timeout raised from 30 s → 45 s.
+  Aligns with service legal maximum: `QUEUE_TIMEOUT_MS` (10 s) + `MAX_RENDER_MS` (30 s) + 5 s
+  network overhead. Prevents false `BrowserFetchTimeoutError` on valid queued renders.
+  Module-level constant `DEFAULT_TIMEOUT_S = 45.0` exported for callers that need to
+  reference the rationale in their own code.
+- **MINOR fix (Gemini):** `BrowserFetchError` base class and all subclasses now accept and
+  expose a `fetch_ms: int | None` attribute. `_parse_render_response` plumbs `fetch_ms` from
+  the service error envelope (SERVICE_SPEC §3) to the raised exception. Consumers can now
+  observe how long the upstream attempted before failing (e.g. 30 001 ms on a 504
+  RENDER_TIMEOUT). `None` when the error is transport-level (TCP timeout, connection refused).
+  Backwards-compatible additive change.
+
 ## 0.1.6 - 2026-05-10
 
 - Added `BrowserFetchClient` — sync typed client for the ht-browser-fetch L0 headless-Chromium

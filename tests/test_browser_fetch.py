@@ -14,6 +14,7 @@ import httpx
 import pytest
 
 from ht_l1_core.browser_fetch import (
+    DEFAULT_TIMEOUT_S,
     BrowserFetchAuthError,
     BrowserFetchBadRequest,
     BrowserFetchClient,
@@ -663,6 +664,7 @@ def test_browser_fetch_module_all_exports() -> None:
 
     assert set(browser_fetch.__all__) == {
         "BrowserFetchClient",
+        "DEFAULT_TIMEOUT_S",
         "Cookie",
         "RenderResult",
         "HealthResult",
@@ -697,3 +699,166 @@ def test_public_exports_reachable_from_package() -> None:
     ):
         assert hasattr(ht_l1_core, name), f"ht_l1_core.{name} not exported"
         assert name in ht_l1_core.__all__, f"{name} missing from ht_l1_core.__all__"
+
+
+# ---------------------------------------------------------------------------
+# MAJOR fix: client default timeout (0.1.7)
+# ---------------------------------------------------------------------------
+
+
+def test_default_timeout_constant_is_45s() -> None:
+    """DEFAULT_TIMEOUT_S module constant must equal 45.0.
+
+    Service legal max = QUEUE_TIMEOUT_MS (10s) + MAX_RENDER_MS (30s) + 5s overhead.
+    Any value below 45s causes false BrowserFetchTimeoutError under valid queued renders.
+    """
+    assert DEFAULT_TIMEOUT_S == 45.0
+
+
+def test_constructor_default_timeout_is_45s(monkeypatch: pytest.MonkeyPatch) -> None:
+    """BrowserFetchClient() with no timeout arg uses DEFAULT_TIMEOUT_S (45.0)."""
+    monkeypatch.delenv("HT_BROWSER_FETCH_URL", raising=False)
+    monkeypatch.delenv("HT_BROWSER_FETCH_TOKEN", raising=False)
+
+    with patch("ht_l1_core.browser_fetch.httpx.Client") as mock_cls:
+        BrowserFetchClient()
+        call_kwargs = mock_cls.call_args[1]
+        assert call_kwargs["timeout"] == 45.0, (
+            f"Expected default timeout 45.0, got {call_kwargs['timeout']}. "
+            "Service budget = QUEUE_TIMEOUT_MS(10s) + MAX_RENDER_MS(30s) + 5s overhead."
+        )
+
+
+# ---------------------------------------------------------------------------
+# MINOR fix: fetch_ms plumbed through error classes (0.1.7)
+# ---------------------------------------------------------------------------
+
+
+def test_browser_fetch_error_base_accepts_fetch_ms() -> None:
+    """BrowserFetchError base class stores fetch_ms attribute."""
+    exc = BrowserFetchError("msg", fetch_ms=123)
+    assert exc.fetch_ms == 123
+
+
+def test_browser_fetch_error_fetch_ms_defaults_to_none() -> None:
+    """BrowserFetchError.fetch_ms defaults to None (e.g. TCP-level errors)."""
+    exc = BrowserFetchError("msg")
+    assert exc.fetch_ms is None
+
+
+def test_render_400_preserves_fetch_ms() -> None:
+    """400 BAD_URL error: fetch_ms from service body is preserved on raised exception."""
+    client = BrowserFetchClient.__new__(BrowserFetchClient)
+    client._base_url = "http://localhost:18766"
+    client._timeout = 45.0
+    mock_http = MagicMock()
+    mock_http.post.return_value = _make_response(
+        400, _error_body("BAD_URL", "bad url", fetch_ms=5)
+    )
+    client._client = mock_http
+
+    with pytest.raises(BrowserFetchBadRequest) as exc_info:
+        client.render("not-a-url")
+
+    assert exc_info.value.fetch_ms == 5
+
+
+def test_render_401_preserves_fetch_ms() -> None:
+    """401 auth error: fetch_ms from service body is preserved on raised exception."""
+    client = BrowserFetchClient.__new__(BrowserFetchClient)
+    client._base_url = "http://localhost:18766"
+    client._timeout = 45.0
+    mock_http = MagicMock()
+    mock_http.post.return_value = _make_response(
+        401, _error_body("UNAUTHORIZED", "missing token", fetch_ms=0)
+    )
+    client._client = mock_http
+
+    with pytest.raises(BrowserFetchAuthError) as exc_info:
+        client.render("https://example.com")
+
+    assert exc_info.value.fetch_ms == 0
+
+
+def test_render_502_preserves_fetch_ms() -> None:
+    """502 UPSTREAM_FAILED: fetch_ms from service body is preserved on raised exception."""
+    client = BrowserFetchClient.__new__(BrowserFetchClient)
+    client._base_url = "http://localhost:18766"
+    client._timeout = 45.0
+    mock_http = MagicMock()
+    mock_http.post.return_value = _make_response(
+        502, _error_body("UPSTREAM_FAILED", "upstream 404", http_code=404, fetch_ms=8200)
+    )
+    client._client = mock_http
+
+    with pytest.raises(BrowserFetchUpstreamFailed) as exc_info:
+        client.render("https://example.com/missing")
+
+    assert exc_info.value.fetch_ms == 8200
+
+
+def test_render_503_preserves_fetch_ms() -> None:
+    """503 not-ready: fetch_ms from service body is preserved on raised exception."""
+    client = BrowserFetchClient.__new__(BrowserFetchClient)
+    client._base_url = "http://localhost:18766"
+    client._timeout = 45.0
+    mock_http = MagicMock()
+    mock_http.post.return_value = _make_response(
+        503, _error_body("INTERNAL", "not ready", fetch_ms=0)
+    )
+    client._client = mock_http
+
+    with pytest.raises(BrowserFetchUnavailable) as exc_info:
+        client.render("https://example.com")
+
+    assert exc_info.value.fetch_ms == 0
+
+
+def test_render_504_preserves_fetch_ms() -> None:
+    """504 RENDER_TIMEOUT: fetch_ms reflects how long service rendered before giving up."""
+    client = BrowserFetchClient.__new__(BrowserFetchClient)
+    client._base_url = "http://localhost:18766"
+    client._timeout = 45.0
+    mock_http = MagicMock()
+    mock_http.post.return_value = _make_response(
+        504, _error_body("RENDER_TIMEOUT", "render exceeded MAX_RENDER_MS", fetch_ms=30001)
+    )
+    client._client = mock_http
+
+    with pytest.raises(BrowserFetchServerError) as exc_info:
+        client.render("https://example.com")
+
+    assert exc_info.value.fetch_ms == 30001
+
+
+def test_render_500_preserves_fetch_ms() -> None:
+    """500 INTERNAL: fetch_ms preserved; None when service omits it from body."""
+    client = BrowserFetchClient.__new__(BrowserFetchClient)
+    client._base_url = "http://localhost:18766"
+    client._timeout = 45.0
+    mock_http = MagicMock()
+    # Service may omit fetch_ms on crash — _safe_json returns {} → .get("fetch_ms") = None
+    mock_http.post.return_value = _make_response(
+        500, {"status": "error", "error_code": "INTERNAL", "error_message": "crash"}
+    )
+    client._client = mock_http
+
+    with pytest.raises(BrowserFetchServerError) as exc_info:
+        client.render("https://example.com")
+
+    assert exc_info.value.fetch_ms is None
+
+
+def test_fetch_ms_none_on_transport_error() -> None:
+    """BrowserFetchTimeoutError (TCP-level) has fetch_ms=None — no service response body."""
+    client = BrowserFetchClient.__new__(BrowserFetchClient)
+    client._base_url = "http://localhost:18766"
+    client._timeout = 45.0
+    mock_http = MagicMock()
+    mock_http.post.side_effect = httpx.TimeoutException("timed out")
+    client._client = mock_http
+
+    with pytest.raises(BrowserFetchTimeoutError) as exc_info:
+        client.render("https://example.com")
+
+    assert exc_info.value.fetch_ms is None

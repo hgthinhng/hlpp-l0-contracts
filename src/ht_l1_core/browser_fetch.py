@@ -21,7 +21,7 @@ Bearer-token resolution (first wins):
   2. ``HT_BROWSER_FETCH_TOKEN`` environment variable
   3. None (no auth — local dev default)
 
-Sync API only for v0.1.6. Async client deferred to v0.1.7+. If a future
+Sync API only for v0.1.7. Async client deferred to v0.1.8+. If a future
 collector needs async, use ``AsyncBrowserFetchClient`` (to be added) rather
 than wrapping this class in ``asyncio.to_thread``.
 
@@ -61,6 +61,12 @@ class BrowserFetchError(Exception):
     All specific sub-exceptions inherit from this so consumers can catch
     ``BrowserFetchError`` as a broad handler, or a specific sub-class for
     precise handling.
+
+    ``fetch_ms`` is the upstream render duration reported by the service in the
+    error envelope (SERVICE_SPEC §3).  It is ``None`` when the error occurred
+    before the service produced a response body (e.g. TCP timeout, connection
+    refused).  For service-originated errors (4xx / 5xx) it reflects how long
+    the service worked before giving up — useful for diagnosing slow targets.
     """
 
     def __init__(
@@ -70,11 +76,13 @@ class BrowserFetchError(Exception):
         http_code: int | None = None,
         service_message: str = "",
         request_url: str = "",
+        fetch_ms: int | None = None,
     ) -> None:
         super().__init__(message)
         self.http_code = http_code
         self.service_message = service_message
         self.request_url = request_url
+        self.fetch_ms = fetch_ms
 
 
 class BrowserFetchUnavailable(BrowserFetchError):
@@ -116,12 +124,14 @@ class BrowserFetchBadRequest(BrowserFetchError):
         service_message: str = "",
         request_url: str = "",
         error_code: str = "",
+        fetch_ms: int | None = None,
     ) -> None:
         super().__init__(
             message,
             http_code=http_code,
             service_message=service_message,
             request_url=request_url,
+            fetch_ms=fetch_ms,
         )
         self.error_code = error_code
 
@@ -145,12 +155,14 @@ class BrowserFetchUpstreamFailed(BrowserFetchError):
         service_message: str = "",
         request_url: str = "",
         upstream_http_code: int | None = None,
+        fetch_ms: int | None = None,
     ) -> None:
         super().__init__(
             message,
             http_code=http_code,
             service_message=service_message,
             request_url=request_url,
+            fetch_ms=fetch_ms,
         )
         self.upstream_http_code = upstream_http_code
 
@@ -253,8 +265,24 @@ class HealthResult:
 # Main client
 # ---------------------------------------------------------------------------
 
+#: Default client-side HTTP timeout in seconds.
+#:
+#: The ht-browser-fetch service can legally spend up to::
+#:
+#:   QUEUE_TIMEOUT_MS (default 10 000 ms)   — wait for a free pool slot
+#:   + MAX_RENDER_MS  (default 30 000 ms)   — actual Playwright render
+#:   + ~5 s overhead                        — network RTT, response serialisation
+#:   ─────────────────────────────────────────
+#:   ≈ 45 s total end-to-end wall time
+#:
+#: Setting this below 45 s causes ``BrowserFetchTimeoutError`` on valid,
+#: queued requests and doubles load when callers retry.  If you change
+#: ``QUEUE_TIMEOUT_MS`` or ``MAX_RENDER_MS`` on the service side, bump this
+#: constant accordingly.
+DEFAULT_TIMEOUT_S: float = 45.0
+
 _DEFAULT_BASE_URL = "http://localhost:18766"
-_DEFAULT_TIMEOUT = 30.0
+_DEFAULT_TIMEOUT = DEFAULT_TIMEOUT_S
 _POOL_TIMEOUT_RETRY_ATTEMPTS = 3
 _POOL_TIMEOUT_BACKOFF_BASE = 1.0
 _POOL_TIMEOUT_BACKOFF_CAP = 8.0
@@ -598,6 +626,7 @@ class BrowserFetchClient:
         error_body = _safe_json(response)
         error_code = error_body.get("error_code", "")
         error_message = error_body.get("error_message", "")
+        fetch_ms: int | None = error_body.get("fetch_ms")
 
         if code in (401, 403):
             raise BrowserFetchAuthError(
@@ -605,6 +634,7 @@ class BrowserFetchClient:
                 http_code=code,
                 service_message=error_message,
                 request_url=request_url,
+                fetch_ms=fetch_ms,
             )
 
         if code == 400:
@@ -614,6 +644,7 @@ class BrowserFetchClient:
                 service_message=error_message,
                 request_url=request_url,
                 error_code=error_code,
+                fetch_ms=fetch_ms,
             )
 
         if code == 502:
@@ -624,6 +655,7 @@ class BrowserFetchClient:
                 service_message=error_message,
                 request_url=request_url,
                 upstream_http_code=upstream_http_code,
+                fetch_ms=fetch_ms,
             )
 
         if code == 503:
@@ -632,6 +664,7 @@ class BrowserFetchClient:
                 http_code=503,
                 service_message=error_message,
                 request_url=request_url,
+                fetch_ms=fetch_ms,
             )
 
         # 500, 504, and anything else unexpected
@@ -640,6 +673,7 @@ class BrowserFetchClient:
             http_code=code,
             service_message=error_message,
             request_url=request_url,
+            fetch_ms=fetch_ms,
         )
 
 
@@ -662,6 +696,8 @@ def _safe_json(response: httpx.Response) -> dict[str, Any]:
 __all__ = [
     # Client
     "BrowserFetchClient",
+    # Constants
+    "DEFAULT_TIMEOUT_S",
     # Result types
     "Cookie",
     "RenderResult",
