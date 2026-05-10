@@ -15,6 +15,7 @@ pip install -e .
 
 | Module | Summary |
 |---|---|
+| `ht_l1_core.browser_fetch` | `BrowserFetchClient` — sync typed client for the ht-browser-fetch L0 rendering service. Exposes `render()`, `health()`, `render_html()`, `render_json()`. Loud-fail error hierarchy; built-in 429 retry. |
 | `ht_l1_core.collector.base` | `BaseCollector` abstract base with `RawArticle` rows and auto-stamped provenance/lineage/vintage fields. |
 | `ht_l1_core.http` | `HttpClient` wrapper with retry on 429/5xx and `Retry-After` support. |
 | `ht_l1_core.idempotency` | `sha256_url` and `idempotent_insert` for SQLite/PostgreSQL. |

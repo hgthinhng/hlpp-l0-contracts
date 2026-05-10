@@ -1,5 +1,19 @@
 import ht_l1_core
 
+from ht_l1_core.browser_fetch import (
+    BrowserFetchAuthError,
+    BrowserFetchBadRequest,
+    BrowserFetchClient,
+    BrowserFetchError,
+    BrowserFetchPoolTimeout,
+    BrowserFetchServerError,
+    BrowserFetchTimeoutError,
+    BrowserFetchUnavailable,
+    BrowserFetchUpstreamFailed,
+    Cookie,
+    HealthResult,
+    RenderResult,
+)
 from ht_l1_core.collector.base import BaseCollector, RawArticle
 from ht_l1_core.http import HttpClient
 from ht_l1_core.idempotency import idempotent_insert, sha256_url
@@ -28,6 +42,20 @@ from ht_l1_core.stamping import stamp_for_bronze
 
 def test_top_level_package_reexports_public_api() -> None:
     expected_exports = {
+        # browser_fetch (0.1.6)
+        "BrowserFetchClient": BrowserFetchClient,
+        "Cookie": Cookie,
+        "RenderResult": RenderResult,
+        "HealthResult": HealthResult,
+        "BrowserFetchError": BrowserFetchError,
+        "BrowserFetchUnavailable": BrowserFetchUnavailable,
+        "BrowserFetchAuthError": BrowserFetchAuthError,
+        "BrowserFetchTimeoutError": BrowserFetchTimeoutError,
+        "BrowserFetchBadRequest": BrowserFetchBadRequest,
+        "BrowserFetchUpstreamFailed": BrowserFetchUpstreamFailed,
+        "BrowserFetchPoolTimeout": BrowserFetchPoolTimeout,
+        "BrowserFetchServerError": BrowserFetchServerError,
+        # collector
         "BaseCollector": BaseCollector,
         "RawArticle": RawArticle,
         "ProviderChain": ProviderChain,

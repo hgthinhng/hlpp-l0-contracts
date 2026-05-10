@@ -1,5 +1,19 @@
 """Public API for HT L1 Core."""
 
+from .browser_fetch import (
+    BrowserFetchAuthError,
+    BrowserFetchBadRequest,
+    BrowserFetchClient,
+    BrowserFetchError,
+    BrowserFetchPoolTimeout,
+    BrowserFetchServerError,
+    BrowserFetchTimeoutError,
+    BrowserFetchUnavailable,
+    BrowserFetchUpstreamFailed,
+    Cookie,
+    HealthResult,
+    RenderResult,
+)
 from .collector.base import BaseCollector, RawArticle
 from .llm.provider import AIProvider, AIResponse, ProviderChain
 from .llm.usage import AIUsage, UsageRecord
@@ -26,6 +40,20 @@ from .idempotency import idempotent_insert, sha256_url
 from .stamping import stamp_for_bronze
 
 __all__ = [
+    # browser_fetch
+    "BrowserFetchClient",
+    "Cookie",
+    "RenderResult",
+    "HealthResult",
+    "BrowserFetchError",
+    "BrowserFetchUnavailable",
+    "BrowserFetchAuthError",
+    "BrowserFetchTimeoutError",
+    "BrowserFetchBadRequest",
+    "BrowserFetchUpstreamFailed",
+    "BrowserFetchPoolTimeout",
+    "BrowserFetchServerError",
+    # collector
     "BaseCollector",
     "RawArticle",
     "ProviderChain",
