@@ -35,7 +35,7 @@ for src_path in reversed(
 ):
     sys.path.insert(0, str(src_path))
 
-from ht_l1_core.schema.crawler_base import CRAWLER_BASE_COLUMNS, CrawlerBaseSchema  # noqa: E402
+from hlpp_l0_contracts.schema.crawler_base import CRAWLER_BASE_COLUMNS, CrawlerBaseSchema  # noqa: E402
 
 _SPEC_PAYLOAD_FIELDS = {
     "m12-newscrawlers-articles-v1": (

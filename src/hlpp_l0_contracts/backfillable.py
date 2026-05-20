@@ -1,6 +1,6 @@
 """Backfillable Protocol decorator and anti-reestamp guard (L1-W6.JB6.a).
 
-Re-exports the ``Backfillable`` protocol from ``ht_l1_core.protocols`` and
+Re-exports the ``Backfillable`` protocol from ``hlpp_l0_contracts.protocols`` and
 provides ``@backfillable_check`` — a decorator that wraps a collector method
 and asserts non-restamped behaviour on invocation.
 
@@ -30,7 +30,7 @@ from collections.abc import Callable, Iterable
 from datetime import date, datetime
 from typing import Any, TypeVar
 
-from ht_l1_core.protocols import Backfillable, BackfillResult, BackfillTargetYearUnavailable
+from hlpp_l0_contracts.protocols import Backfillable, BackfillResult, BackfillTargetYearUnavailable
 
 __all__ = [
     "Backfillable",

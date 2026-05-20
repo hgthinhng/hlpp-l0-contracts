@@ -3,8 +3,8 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ht-l1-core"
-version = "0.1.9"
+name = "hlpp-l0-contracts"
+version = "0.2.0"
 requires-python = ">=3.11"
 dependencies = [
     "tenacity",

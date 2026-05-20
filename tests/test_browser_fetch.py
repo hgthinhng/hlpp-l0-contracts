@@ -1,4 +1,4 @@
-"""Tests for BrowserFetchClient in ht_l1_core.browser_fetch.
+"""Tests for BrowserFetchClient in hlpp_l0_contracts.browser_fetch.
 
 Uses unittest.mock to patch httpx.Client — respx is not available in this env.
 All tests are synchronous and isolated (no real network calls).
@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 import httpx
 import pytest
 
-from ht_l1_core.browser_fetch import (
+from hlpp_l0_contracts.browser_fetch import (
     DEFAULT_TIMEOUT_S,
     BrowserFetchAuthError,
     BrowserFetchBadRequest,
@@ -92,7 +92,7 @@ def test_constructor_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("HT_BROWSER_FETCH_URL", raising=False)
     monkeypatch.delenv("HT_BROWSER_FETCH_TOKEN", raising=False)
 
-    with patch("ht_l1_core.browser_fetch.httpx.Client") as mock_cls:
+    with patch("hlpp_l0_contracts.browser_fetch.httpx.Client") as mock_cls:
         BrowserFetchClient()
         call_kwargs = mock_cls.call_args[1]
         assert call_kwargs["base_url"] == "http://localhost:18766"
@@ -105,7 +105,7 @@ def test_constructor_env_url_used(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("HT_BROWSER_FETCH_URL", "http://prod-vps:18766")
     monkeypatch.delenv("HT_BROWSER_FETCH_TOKEN", raising=False)
 
-    with patch("ht_l1_core.browser_fetch.httpx.Client") as mock_cls:
+    with patch("hlpp_l0_contracts.browser_fetch.httpx.Client") as mock_cls:
         BrowserFetchClient()
         call_kwargs = mock_cls.call_args[1]
         assert call_kwargs["base_url"] == "http://prod-vps:18766"
@@ -116,7 +116,7 @@ def test_constructor_explicit_overrides_env(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setenv("HT_BROWSER_FETCH_URL", "http://from-env:18766")
     monkeypatch.setenv("HT_BROWSER_FETCH_TOKEN", "env-token")
 
-    with patch("ht_l1_core.browser_fetch.httpx.Client") as mock_cls:
+    with patch("hlpp_l0_contracts.browser_fetch.httpx.Client") as mock_cls:
         BrowserFetchClient(
             base_url="http://explicit:9000",
             bearer_token="explicit-token",
@@ -131,7 +131,7 @@ def test_constructor_env_token_sets_auth_header(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.delenv("HT_BROWSER_FETCH_URL", raising=False)
     monkeypatch.setenv("HT_BROWSER_FETCH_TOKEN", "secret-from-env")
 
-    with patch("ht_l1_core.browser_fetch.httpx.Client") as mock_cls:
+    with patch("hlpp_l0_contracts.browser_fetch.httpx.Client") as mock_cls:
         BrowserFetchClient()
         call_kwargs = mock_cls.call_args[1]
         assert call_kwargs["headers"]["Authorization"] == "Bearer secret-from-env"
@@ -142,7 +142,7 @@ def test_constructor_timeout_passed_to_httpx(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.delenv("HT_BROWSER_FETCH_URL", raising=False)
     monkeypatch.delenv("HT_BROWSER_FETCH_TOKEN", raising=False)
 
-    with patch("ht_l1_core.browser_fetch.httpx.Client") as mock_cls:
+    with patch("hlpp_l0_contracts.browser_fetch.httpx.Client") as mock_cls:
         BrowserFetchClient(timeout=60.0)
         call_kwargs = mock_cls.call_args[1]
         assert call_kwargs["timeout"] == 60.0
@@ -377,7 +377,7 @@ def test_429_retries_then_succeeds() -> None:
     mock_http.post.side_effect = [pool_resp, pool_resp, success_resp]
     client._client = mock_http
 
-    with patch("ht_l1_core.browser_fetch.time.sleep") as mock_sleep:
+    with patch("hlpp_l0_contracts.browser_fetch.time.sleep") as mock_sleep:
         result = client.render("https://example.com")
 
     assert mock_http.post.call_count == 3
@@ -395,7 +395,7 @@ def test_429_retries_exhausted_raises_pool_timeout() -> None:
     mock_http.post.return_value = pool_resp
     client._client = mock_http
 
-    with patch("ht_l1_core.browser_fetch.time.sleep"):
+    with patch("hlpp_l0_contracts.browser_fetch.time.sleep"):
         with pytest.raises(BrowserFetchPoolTimeout) as exc_info:
             client.render("https://example.com")
 
@@ -414,7 +414,7 @@ def test_429_backoff_timing() -> None:
     mock_http.post.return_value = pool_resp
     client._client = mock_http
 
-    with patch("ht_l1_core.browser_fetch.time.sleep") as mock_sleep:
+    with patch("hlpp_l0_contracts.browser_fetch.time.sleep") as mock_sleep:
         with pytest.raises(BrowserFetchPoolTimeout):
             client.render("https://example.com")
 
@@ -582,7 +582,7 @@ def test_no_silent_fallback_error_responses_always_raise() -> None:
         client._client = mock_http
 
         with pytest.raises(BrowserFetchError, match=r".*"), \
-             patch("ht_l1_core.browser_fetch.time.sleep"):
+             patch("hlpp_l0_contracts.browser_fetch.time.sleep"):
             client.render("https://example.com")
 
 
@@ -647,7 +647,7 @@ def test_bearer_token_sent_in_authorization_header(monkeypatch: pytest.MonkeyPat
     monkeypatch.delenv("HT_BROWSER_FETCH_URL", raising=False)
     monkeypatch.delenv("HT_BROWSER_FETCH_TOKEN", raising=False)
 
-    with patch("ht_l1_core.browser_fetch.httpx.Client") as mock_cls:
+    with patch("hlpp_l0_contracts.browser_fetch.httpx.Client") as mock_cls:
         BrowserFetchClient(bearer_token="my-secret")
         call_kwargs = mock_cls.call_args[1]
         assert call_kwargs["headers"]["Authorization"] == "Bearer my-secret"
@@ -660,7 +660,7 @@ def test_bearer_token_sent_in_authorization_header(monkeypatch: pytest.MonkeyPat
 
 def test_browser_fetch_module_all_exports() -> None:
     """__all__ contains the expected public names."""
-    from ht_l1_core import browser_fetch
+    from hlpp_l0_contracts import browser_fetch
 
     assert set(browser_fetch.__all__) == {
         "BrowserFetchClient",
@@ -680,8 +680,8 @@ def test_browser_fetch_module_all_exports() -> None:
 
 
 def test_public_exports_reachable_from_package() -> None:
-    """All browser_fetch types are importable from ht_l1_core top-level."""
-    import ht_l1_core
+    """All browser_fetch types are importable from hlpp_l0_contracts top-level."""
+    import hlpp_l0_contracts
 
     for name in (
         "BrowserFetchClient",
@@ -697,8 +697,8 @@ def test_public_exports_reachable_from_package() -> None:
         "BrowserFetchPoolTimeout",
         "BrowserFetchServerError",
     ):
-        assert hasattr(ht_l1_core, name), f"ht_l1_core.{name} not exported"
-        assert name in ht_l1_core.__all__, f"{name} missing from ht_l1_core.__all__"
+        assert hasattr(hlpp_l0_contracts, name), f"hlpp_l0_contracts.{name} not exported"
+        assert name in hlpp_l0_contracts.__all__, f"{name} missing from hlpp_l0_contracts.__all__"
 
 
 # ---------------------------------------------------------------------------
@@ -720,7 +720,7 @@ def test_constructor_default_timeout_is_45s(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.delenv("HT_BROWSER_FETCH_URL", raising=False)
     monkeypatch.delenv("HT_BROWSER_FETCH_TOKEN", raising=False)
 
-    with patch("ht_l1_core.browser_fetch.httpx.Client") as mock_cls:
+    with patch("hlpp_l0_contracts.browser_fetch.httpx.Client") as mock_cls:
         BrowserFetchClient()
         call_kwargs = mock_cls.call_args[1]
         assert call_kwargs["timeout"] == 45.0, (

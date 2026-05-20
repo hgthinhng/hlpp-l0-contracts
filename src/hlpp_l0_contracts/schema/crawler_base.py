@@ -1,4 +1,4 @@
-"""Shared crawler m12 base schema (Wave-3 deliverable, ht-l1-core 0.1.2).
+"""Shared crawler m12 base schema (Wave-3 deliverable, hlpp-l0-contracts 0.1.2).
 
 Composes ``_BronzeProvenanceMixin`` + ``_VintageMixin`` + ``_LineageMixin`` and
 adds the 5 ToS/extraction-risk fields per ADR-002 amendment 2026-05-05 FX-9.
@@ -13,9 +13,9 @@ import pandera.pandas as pa
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, declarative_mixin, mapped_column
 
-from ht_l1_core.schema.lineage import LineageSchema, _LineageMixin
-from ht_l1_core.schema.provenance import BronzeProvenanceSchema, _BronzeProvenanceMixin
-from ht_l1_core.schema.vintage import VintageSchema, _VintageMixin
+from hlpp_l0_contracts.schema.lineage import LineageSchema, _LineageMixin
+from hlpp_l0_contracts.schema.provenance import BronzeProvenanceSchema, _BronzeProvenanceMixin
+from hlpp_l0_contracts.schema.vintage import VintageSchema, _VintageMixin
 
 
 @declarative_mixin

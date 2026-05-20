@@ -1,4 +1,4 @@
-"""Tests for ht_l1_core.backfillable — Backfillable Protocol + @backfillable_check decorator."""
+"""Tests for hlpp_l0_contracts.backfillable — Backfillable Protocol + @backfillable_check decorator."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from datetime import date
 
 import pytest
 
-from ht_l1_core.backfillable import (
+from hlpp_l0_contracts.backfillable import (
     Backfillable,
     BackfillResult,
     BackfillRow,

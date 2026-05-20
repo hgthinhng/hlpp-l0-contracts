@@ -1,13 +1,53 @@
 # Changelog
 
+## 0.2.0 - 2026-05-21
+
+**HLPP rebrand + foundation contracts**
+
+- **BREAKING (soft):** Package renamed `ht-l1-core` → `hlpp-l0-contracts`. Old import path
+  `ht_l1_core` still works via a backward-compat shim under `src/ht_l1_core/__init__.py`
+  that re-exports `hlpp_l0_contracts` and emits a `DeprecationWarning`. Shim will be
+  removed in Phase 8b once all downstream repos cut over.
+- **GitHub:** repo renamed `hgthinhng/ht-l1-core` → `hgthinhng/hlpp-l0-contracts` (PUBLIC,
+  old URL auto-redirects 90 days). Git remote updated; module imports mass find/replaced
+  across src/, tests/, docs/, pyproject.toml, README, CHANGELOG, Makefile.
+- **NEW `hlpp_l0_contracts.schemas`** — Pydantic contracts for the HLPP v1.0 storage
+  taxonomy (spec §7-§8 in `~/.omc/plans/2026-05-20-hlpp-v1-architecture.md`):
+  - `schemas.base.HlppNormalizedBase` — mandatory L1b cols (ticker, as_of_date,
+    business_date, business_time, vendor, ingested_at, schema_id, dataset_id,
+    builder_version). Frozen, `extra="forbid"`.
+  - `schemas.base.HlppComputedBase` — extends NORMALIZED + adds analysis lineage
+    (analysis_version, input_partitions, chain_depth ∈ l2a..l2f, domain ∈ factor/ta/fa
+    /signal/regime/alert, lookback_days).
+  - `schemas.normalized` — 5 sample L1b payloads (PriceIntraday30s, PriceDaily,
+    ForeignFlowDaily, FundamentalsQuarterly, Ticker360). 6 remaining classified in spec
+    §9 deferred to Phase 4 builder migration.
+  - `schemas.computed` — 10 sample L2 payloads spanning L2a (FactorSize, FactorMomentum
+    _12_1m, FactorQuality, CapmBeta, TaIndicator, FaDupont3Way), L2b (FactorResidualMomentum,
+    Peg, RegimeMarkovVnindex), and L2c (SignalBlend).
+- **NEW `hlpp_l0_contracts.universe`** — versioned YAML loader. Ships skeleton
+  `v2_120.yaml` (120 tickers = VN30 + HOSE50_ex_VN30 + HNX30 + UPCOM10) + the
+  `ticker_master_v1_seed.csv` (1534-row full universe reference, migrated from
+  `silver-builders-seed/`). Sub-pool tickers populated from vendor query at Phase 8a.
+- **NEW `hlpp_l0_contracts.validators`** — `validate_normalized()` and
+  `validate_computed()` gate parquet writes; check mandatory columns, dataset_id /
+  chain_depth / domain uniformity, plus Pydantic row sampling. Raise
+  `SchemaValidationError`. CI lint (deferred) will enforce a call upstream of every
+  `to_parquet()` in pipelines source.
+- **NEW `hlpp_l0_contracts.git_meta`** — `git_commit_hash()` (LRU-cached, short or full)
+  and `git_dirty()` to auto-inject `builder_version` / `analysis_version`. Rejects
+  manual semver bumps (per Gemini round-2 critic — solo-dev bumps get forgotten).
+- **Tests:** +30 new tests across `test_hlpp_schemas_base.py`, `test_hlpp_universe.py`,
+  `test_hlpp_validators.py`, `test_hlpp_git_meta.py`. Total suite: **167 pass**.
+
 ## 0.1.9 - 2026-05-10
 
 - feat(L1-W6.JB6.a + JB4): Backfillable Protocol + SourceStatus enum + emit_skipped_row helper
-- Added `ht_l1_core.backfillable` module with `@backfillable_check` decorator that wraps
+- Added `hlpp_l0_contracts.backfillable` module with `@backfillable_check` decorator that wraps
   collector methods and raises `RuntimeError` when all returned rows have today's date instead
   of the requested `target_year` (anti-reestamp guard).  Re-exports `Backfillable`,
-  `BackfillResult`, `BackfillTargetYearUnavailable` from `ht_l1_core.protocols`.
-- Added `ht_l1_core.source_status` module with `SourceStatus` (`StrEnum`: ACTIVE,
+  `BackfillResult`, `BackfillTargetYearUnavailable` from `hlpp_l0_contracts.protocols`.
+- Added `hlpp_l0_contracts.source_status` module with `SourceStatus` (`StrEnum`: ACTIVE,
   EXTERNAL_DEAD, EXPERIMENTAL), `SourceManifestEntry` dataclass, and `emit_skipped_row`
   helper that returns a 20-col `CrawlerBaseSchema`-shaped row with `status="SKIPPED"`.
   Loud WARNING log fires whenever `status=EXTERNAL_DEAD` per loud-fail discipline.

@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ht_l1_core.idempotency import idempotent_insert, sha256_url
+from hlpp_l0_contracts.idempotency import idempotent_insert, sha256_url
 
 
 class Base(DeclarativeBase):

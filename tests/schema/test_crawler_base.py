@@ -1,4 +1,4 @@
-"""Tests for ht_l1_core.schema.crawler_base (Wave-3 0.1.2 deliverable)."""
+"""Tests for hlpp_l0_contracts.schema.crawler_base (Wave-3 0.1.2 deliverable)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 import pandas as pd
 import pytest
 
-from ht_l1_core.schema.crawler_base import CRAWLER_BASE_COLUMNS, CrawlerBaseSchema
+from hlpp_l0_contracts.schema.crawler_base import CRAWLER_BASE_COLUMNS, CrawlerBaseSchema
 
 
 _EXPECTED_COLUMNS = frozenset(

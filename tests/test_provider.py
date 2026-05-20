@@ -8,7 +8,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ht_l1_core.llm.provider import (
+from hlpp_l0_contracts.llm.provider import (
     AIProvider,
     AIResponse,
     AnthropicProvider,
@@ -119,7 +119,7 @@ def test_provider_chain_does_not_carry_a3_usage_buffer_methods():
 
 
 def test_core_provider_types_are_available_without_vendor_sdk_imports():
-    import ht_l1_core.llm.provider as provider_module
+    import hlpp_l0_contracts.llm.provider as provider_module
 
     assert AnthropicProvider.name == "anthropic"
     assert OpenAICompatibleProvider.name == "openai"

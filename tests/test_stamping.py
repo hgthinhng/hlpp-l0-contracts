@@ -10,8 +10,8 @@ from pandera.errors import SchemaError
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-import ht_l1_core
-from ht_l1_core.stamping import stamp_for_bronze
+import hlpp_l0_contracts
+from hlpp_l0_contracts.stamping import stamp_for_bronze
 
 
 def _expected_row_hash(row: dict[str, object]) -> str:
@@ -108,4 +108,4 @@ def test_stamp_for_bronze_raises_schema_error_for_invalid_status() -> None:
 
 
 def test_stamp_for_bronze_is_exported_from_top_level_package() -> None:
-    assert ht_l1_core.stamp_for_bronze is stamp_for_bronze
+    assert hlpp_l0_contracts.stamp_for_bronze is stamp_for_bronze

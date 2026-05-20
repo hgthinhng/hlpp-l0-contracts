@@ -1,10 +1,10 @@
 ## §4 ADR-016 LOCK — Tiered L1→L2 Trigger (LOAD-BEARING)
 
-**Decision**: HTAP L1→L2 trigger transport is partitioned into 5 tiers. ht-l1-core 0.1.5 ships the protocol contracts; per-repo collectors implement the tier they belong to.
+**Decision**: HTAP L1→L2 trigger transport is partitioned into 5 tiers. hlpp-l0-contracts 0.1.5 ships the protocol contracts; per-repo collectors implement the tier they belong to.
 
 **Notation**: §4 is the Wave 5 plan section that locks the trigger-transport doctrine. P1 means operator pushback on hourly-latency polling; D1 means data-cadence diversity requires tier-specific transports. F12-A is the Wave 1 target-year backfill contract; D9 is the research-report daily-fresh route.
 
-**Tier matrix** (canonical — copy into `ht-l1-core/docs/adr/ADR-016-tiered-l1-l2-trigger.md`):
+**Tier matrix** (canonical — copy into `hlpp-l0-contracts/docs/adr/ADR-016-tiered-l1-l2-trigger.md`):
 
 | Tier | Routes (Wave-5 in scope) | Transport | Latency target |
 |---|---|---|---|
@@ -27,7 +27,7 @@
 
 **Consequences**:
 
-- ht-l1-core 0.1.5 ships 2 protocol families: `Backfillable` (codifies F12-A target_year honor) and `TierAStreamConsumer` + `TierAStreamSession` + `BarData` (callback payload + start/stop lifecycle).
+- hlpp-l0-contracts 0.1.5 ships 2 protocol families: `Backfillable` (codifies F12-A target_year honor) and `TierAStreamConsumer` + `TierAStreamSession` + `BarData` (callback payload + start/stop lifecycle).
 - bctc-shallow-crawlers / vnstock-adapters / cross-market-adapters / MacroDataCrawlers all stay tier C or D. No streaming collectors needed in Wave 5.0.
 - fqx-adapters gains 1 streaming collector (`realtime.py`) + 7 batch collectors stay tier C.
 - L2 silver-builders in future Wave 5.x must declare which tier they consume. Tier A uses hot-buffer poll/callback; tiers C/D use watermark-pull via `last_consumed_at`. Legacy file-tail is rejected for trigger transport.

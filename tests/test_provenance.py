@@ -6,7 +6,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ht_l1_core.schema.provenance import BronzeProvenanceSchema
+from hlpp_l0_contracts.schema.provenance import BronzeProvenanceSchema
 
 
 def test_bronze_provenance_schema_validates_non_null_columns():

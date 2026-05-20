@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, text
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ht_l1_core.llm.usage import AIUsage
+from hlpp_l0_contracts.llm.usage import AIUsage
 
 
 def test_log_response_calculates_cost_and_flushes_to_sqlite() -> None:

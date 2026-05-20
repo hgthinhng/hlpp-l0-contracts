@@ -10,7 +10,7 @@ from sqlalchemy import Integer, create_engine, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-from ht_l1_core.schema.vintage import VintageSchema, _VintageMixin
+from hlpp_l0_contracts.schema.vintage import VintageSchema, _VintageMixin
 
 
 class Base(DeclarativeBase):

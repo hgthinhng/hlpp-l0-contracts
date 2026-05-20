@@ -5,7 +5,7 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ht_l1_core.http import HttpClient
+from hlpp_l0_contracts.http import HttpClient
 
 
 def test_get_retries_429_then_returns_success():

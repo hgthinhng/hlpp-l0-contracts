@@ -40,7 +40,7 @@ m12-{vendor_slug}-{capability}-v{N}
 
 `CrawlerBaseSchema` contributes these 20 columns. New CrawlerBase-backed
 contracts must keep these names, order, dtypes, and nullability byte-identical
-unless ht-l1-core intentionally releases a breaking schema change.
+unless hlpp-l0-contracts intentionally releases a breaking schema change.
 
 | # | Name | Type | Nullable | Semantics |
 |---|---|---|---|---|
@@ -160,10 +160,10 @@ schema validation are separate Layer B and Layer C work.
 
 ## Backlog Items
 
-1. ht-l1-core 0.1.3 should make `_code_sha()` loud-fail instead of falling back
+1. hlpp-l0-contracts 0.1.3 should make `_code_sha()` loud-fail instead of falling back
    to package metadata when no git SHA or `HT_CODE_SHA` is available.
 2. Layer C should add a CI validator that compares every `CrawlerBaseSchema`
-   base-column sequence against ht-l1-core.
+   base-column sequence against hlpp-l0-contracts.
 3. Wave 2 adapter contracts should either gain explicit payload schemas or keep
    the passthrough boundary documented in their per-contract docs.
 4. The NewsCrawlers catalyst Arrow schema should be evaluated for migration to a

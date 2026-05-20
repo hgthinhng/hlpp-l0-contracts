@@ -10,8 +10,8 @@ from typing import Any
 
 import pandas as pd
 
-from ht_l1_core.schema.provenance import BronzeProvenanceSchema
-from ht_l1_core.schema.vintage import VintageSchema
+from hlpp_l0_contracts.schema.provenance import BronzeProvenanceSchema
+from hlpp_l0_contracts.schema.vintage import VintageSchema
 
 
 def stamp_for_bronze(

@@ -62,10 +62,10 @@ A single canonical contract — implementable by every m12 adapter — that lets
 
 ## 3. Proposed design
 
-### 3.1 `Backfillable` Protocol (lands in `ht-l1-core`)
+### 3.1 `Backfillable` Protocol (lands in `hlpp-l0-contracts`)
 
 ```python
-# ht_l1_core/backfill/protocol.py
+# hlpp_l0_contracts/backfill/protocol.py
 from collections.abc import Iterable
 from datetime import date
 from typing import Protocol, runtime_checkable
@@ -121,10 +121,10 @@ class TickerPeriodArgs(BackfillArgSchema):
     period: Literal["quarter", "year"]
 ```
 
-### 3.3 Shared CLI (lands in `ht-l1-core`)
+### 3.3 Shared CLI (lands in `hlpp-l0-contracts`)
 
 ```python
-# ht_l1_core/backfill/cli.py
+# hlpp_l0_contracts/backfill/cli.py
 def main(argv: list[str] | None = None) -> int:
     """Universal backfill driver. Discovers Backfillable adapters via entry points."""
     parser = build_parser()
@@ -143,12 +143,12 @@ CLI surface stays minimal at the top level (`contract, --start, --end, --delay`)
 Each adapter declares its modules in `pyproject.toml`:
 
 ```toml
-[project.entry-points."ht_l1_core.backfill"]
+[project.entry-points."hlpp_l0_contracts.backfill"]
 "m12-vnstock-ohlcv-raw-v1" = "vnstock_adapters.v2.ohlcv_raw"
 "m12-fqx-ohlcv-raw-v1" = "fqx_adapters.ohlcv_raw"
 ```
 
-The shared CLI walks `importlib.metadata.entry_points(group="ht_l1_core.backfill")` to discover Backfillable modules — no per-repo registry duplication.
+The shared CLI walks `importlib.metadata.entry_points(group="hlpp_l0_contracts.backfill")` to discover Backfillable modules — no per-repo registry duplication.
 
 ### 3.5 Vendor-outage policy unification
 
@@ -160,16 +160,16 @@ The shared CLI also enforces the `OK_EMPTY` / `SKIPPED` row policy (per ADR-003)
 
 | Repo | Action |
 |---|---|
-| `ht-l1-core` | Add `backfill/` package (Protocol, ArgSchema, CLI, outage helper). Bump 0.1.3 with new module |
-| `fqx-adapters` | Replace local `backfill.py` with `ht_l1_core.backfill.cli`. Each module gains `arg_schema`, `contract_id`, `iter_runs`, refactor `collect()` to take args |
+| `hlpp-l0-contracts` | Add `backfill/` package (Protocol, ArgSchema, CLI, outage helper). Bump 0.1.3 with new module |
+| `fqx-adapters` | Replace local `backfill.py` with `hlpp_l0_contracts.backfill.cli`. Each module gains `arg_schema`, `contract_id`, `iter_runs`, refactor `collect()` to take args |
 | `vnstock-adapters` | Same — drop the no-arg CLI, retire `DEFAULT_ADAPTERS` registry, add entry-points. The 7 currently-uncovered contracts gain backfill support automatically |
 | `cross-market-adapters` | Implement `Backfillable` for V8 / V9 / VIX. No legacy CLI to remove |
 
-Migration order: ht-l1-core 0.1.3 first (additive — old CLI keeps working), then per-repo migration in any order. No big-bang.
+Migration order: hlpp-l0-contracts 0.1.3 first (additive — old CLI keeps working), then per-repo migration in any order. No big-bang.
 
 ### Compatibility
 
-- Old `<repo>/backfill <contract> --start --end --delay` invocations keep working during migration: the `ht_l1_core.backfill.cli` accepts the same minimal arg set for snapshot contracts, just with `arg_schema = DateRangeArgs`.
+- Old `<repo>/backfill <contract> --start --end --delay` invocations keep working during migration: the `hlpp_l0_contracts.backfill.cli` accepts the same minimal arg set for snapshot contracts, just with `arg_schema = DateRangeArgs`.
 - Tests don't break — `run_backfill(contract, start=, end=)` keyword API can be preserved as a thin wrapper.
 
 ---
@@ -179,7 +179,7 @@ Migration order: ht-l1-core 0.1.3 first (additive — old CLI keeps working), th
 | Alternative | Rejected because |
 |---|---|
 | **Status quo**: per-repo CLI + ad-hoc scripts for non-trivial contracts | 7 contracts uncovered today, growing as Wave 3 lands. Each ad-hoc script reimplements date iter + outage handling |
-| **Click / Typer** instead of argparse + Pydantic | One more dep; Pydantic is already pulled in via `ht-l1-core/sources_config.py` validators. argparse + Pydantic gives the same ergonomics |
+| **Click / Typer** instead of argparse + Pydantic | One more dep; Pydantic is already pulled in via `hlpp-l0-contracts/sources_config.py` validators. argparse + Pydantic gives the same ergonomics |
 | **Thrift-style schema-first** | Overkill for an internal CLI. Pydantic ArgSchema gives type-checking + JSON-schema export for free |
 | **Per-adapter CLI module** (just write `backfill.py` in each repo with full per-contract args) | Bloats every repo; outage policy + telemetry diverges across repos. The point of this RFC is to centralize that |
 
@@ -197,8 +197,8 @@ Migration order: ht-l1-core 0.1.3 first (additive — old CLI keeps working), th
 ## 7. Acceptance for "RFC accepted"
 
 - Operator answers Q1–Q4 (or accepts defaults)
-- This file moves to `ht-l1-core/docs/backfill-arg-schema-DESIGN.md` (status: ACCEPTED)
-- Implementation ticket lands as ht-l1-core 0.1.3 milestone
+- This file moves to `hlpp-l0-contracts/docs/backfill-arg-schema-DESIGN.md` (status: ACCEPTED)
+- Implementation ticket lands as hlpp-l0-contracts 0.1.3 milestone
 - Then per-repo migrations dispatch in Wave 4 (or parallel with Wave 3 close-out if priority bumps)
 
 ---
@@ -206,5 +206,5 @@ Migration order: ht-l1-core 0.1.3 first (additive — old CLI keeps working), th
 ## 8. Out of scope for this RFC
 
 - Wave 4 silver-builder consumption of m12 parquets — separate workstream
-- Vendor cost-budget guard tuning — already in `ht_l1_core.llm.budget`, integration left to CLI implementation phase
+- Vendor cost-budget guard tuning — already in `hlpp_l0_contracts.llm.budget`, integration left to CLI implementation phase
 - Backfill scheduling (cron / Airflow integration) — separate handoff doc

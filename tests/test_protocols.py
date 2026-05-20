@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from ht_l1_core.protocols import (
+from hlpp_l0_contracts.protocols import (
     Backfillable,
     BackfillResult,
     BackfillTargetYearUnavailable,
@@ -188,7 +188,7 @@ def test_bar_callback_alias_accepts_bar_data_callables() -> None:
 
 
 def test_protocol_exports_are_available_from_package_namespace() -> None:
-    import ht_l1_core.protocols as protocols
+    import hlpp_l0_contracts.protocols as protocols
 
     assert protocols.__all__ == [
         "Backfillable",
@@ -202,7 +202,7 @@ def test_protocol_exports_are_available_from_package_namespace() -> None:
 
 
 def test_public_protocol_classes_are_reexported_from_top_level_package() -> None:
-    import ht_l1_core
+    import hlpp_l0_contracts
 
     expected: dict[str, Any] = {
         "Backfillable": Backfillable,
@@ -214,5 +214,5 @@ def test_public_protocol_classes_are_reexported_from_top_level_package() -> None
     }
 
     for name, value in expected.items():
-        assert getattr(ht_l1_core, name) is value
-        assert name in ht_l1_core.__all__
+        assert getattr(hlpp_l0_contracts, name) is value
+        assert name in hlpp_l0_contracts.__all__

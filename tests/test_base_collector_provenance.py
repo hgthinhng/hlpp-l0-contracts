@@ -6,8 +6,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-import ht_l1_core.collector.base as base_module
-from ht_l1_core.collector.base import BaseCollector, RawArticle
+import hlpp_l0_contracts.collector.base as base_module
+from hlpp_l0_contracts.collector.base import BaseCollector, RawArticle
 
 
 class OneRowCollector(BaseCollector):

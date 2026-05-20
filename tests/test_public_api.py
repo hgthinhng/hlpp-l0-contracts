@@ -1,6 +1,6 @@
-import ht_l1_core
+import hlpp_l0_contracts
 
-from ht_l1_core.browser_fetch import (
+from hlpp_l0_contracts.browser_fetch import (
     BrowserFetchAuthError,
     BrowserFetchBadRequest,
     BrowserFetchClient,
@@ -14,13 +14,13 @@ from ht_l1_core.browser_fetch import (
     HealthResult,
     RenderResult,
 )
-from ht_l1_core.collector.base import BaseCollector, RawArticle
-from ht_l1_core.http import HttpClient
-from ht_l1_core.idempotency import idempotent_insert, sha256_url
-from ht_l1_core.llm.budget import BudgetExceeded, CostBudgetGuard
-from ht_l1_core.llm.provider import AIProvider, AIResponse, ProviderChain
-from ht_l1_core.llm.usage import AIUsage, UsageRecord
-from ht_l1_core.protocols import (
+from hlpp_l0_contracts.collector.base import BaseCollector, RawArticle
+from hlpp_l0_contracts.http import HttpClient
+from hlpp_l0_contracts.idempotency import idempotent_insert, sha256_url
+from hlpp_l0_contracts.llm.budget import BudgetExceeded, CostBudgetGuard
+from hlpp_l0_contracts.llm.provider import AIProvider, AIResponse, ProviderChain
+from hlpp_l0_contracts.llm.usage import AIUsage, UsageRecord
+from hlpp_l0_contracts.protocols import (
     Backfillable,
     BackfillResult,
     BackfillTargetYearUnavailable,
@@ -28,16 +28,16 @@ from ht_l1_core.protocols import (
     TierAStreamConsumer,
     TierAStreamSession,
 )
-from ht_l1_core.schema.crawler_base import (
+from hlpp_l0_contracts.schema.crawler_base import (
     CRAWLER_BASE_COLUMNS,
     CrawlerBaseSchema,
     _CrawlerBaseMixin,
 )
-from ht_l1_core.schema.lineage import LineageSchema, _LineageMixin
-from ht_l1_core.schema.provenance import BronzeProvenanceSchema, _BronzeProvenanceMixin
-from ht_l1_core.schema.vintage import VintageSchema, _VintageMixin
-from ht_l1_core.sources_config import SourceEntry, load_sources_yaml
-from ht_l1_core.stamping import stamp_for_bronze
+from hlpp_l0_contracts.schema.lineage import LineageSchema, _LineageMixin
+from hlpp_l0_contracts.schema.provenance import BronzeProvenanceSchema, _BronzeProvenanceMixin
+from hlpp_l0_contracts.schema.vintage import VintageSchema, _VintageMixin
+from hlpp_l0_contracts.sources_config import SourceEntry, load_sources_yaml
+from hlpp_l0_contracts.stamping import stamp_for_bronze
 
 
 def test_top_level_package_reexports_public_api() -> None:
@@ -88,6 +88,6 @@ def test_top_level_package_reexports_public_api() -> None:
         "stamp_for_bronze": stamp_for_bronze,
     }
 
-    assert ht_l1_core.__all__ == list(expected_exports)
+    assert hlpp_l0_contracts.__all__ == list(expected_exports)
     for name, value in expected_exports.items():
-        assert getattr(ht_l1_core, name) is value
+        assert getattr(hlpp_l0_contracts, name) is value

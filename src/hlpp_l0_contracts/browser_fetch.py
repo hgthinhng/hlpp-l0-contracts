@@ -5,7 +5,7 @@ ht-browser-fetch headless-Chromium rendering service (ADR-019).
 
 Usage::
 
-    from ht_l1_core import BrowserFetchClient
+    from hlpp_l0_contracts import BrowserFetchClient
 
     client = BrowserFetchClient()          # picks up HT_BROWSER_FETCH_URL / HT_BROWSER_FETCH_TOKEN from env
     result = client.render("https://data.hnx.vn/...", wait_for="networkidle")

@@ -9,8 +9,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ht_l1_core.schema.lineage import LineageSchema, _LineageMixin
-from ht_l1_core.schema.vintage import _VintageMixin
+from hlpp_l0_contracts.schema.lineage import LineageSchema, _LineageMixin
+from hlpp_l0_contracts.schema.vintage import _VintageMixin
 
 
 LINEAGE_COLUMNS = [

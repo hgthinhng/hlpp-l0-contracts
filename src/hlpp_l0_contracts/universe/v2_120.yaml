@@ -1,0 +1,43 @@
+# HLPP-UNIVERSE v2_120 (Elon first-principles, 2026-05-20)
+#
+# Cấu trúc 120 tickers, chiếm ≥85% Mcap + Mvolume thị trường VN.
+# Tickers cụ thể PHẢI populate từ vendor query (vnstock VCI exchange info + mcap rank)
+# trước Phase 8a backfill. Hiện chỉ skeleton + sub-pool sizing.
+
+version: v2_120
+generated_at: 2026-05-20
+total: 120
+target_coverage_mcap_pct: 85
+target_coverage_volume_pct: 85
+
+composition:
+  vn30:
+    size: 30
+    source: "Official VN30 index constituents (HOSE)"
+    tickers: []  # POPULATE: copy current VN30 list
+  hose_top50_ex_vn30:
+    size: 50
+    source: "HOSE market-cap rank, excluding VN30"
+    tickers: []  # POPULATE: query vnstock VCI mcap rank
+  hnx30:
+    size: 30
+    source: "Official HNX30 index constituents (HNX)"
+    tickers: []  # POPULATE: copy current HNX30 list
+  upcom_top10:
+    size: 10
+    source: "UPCOM market-cap rank top 10"
+    tickers: []  # POPULATE: query vnstock VCI mcap rank
+
+# Flat list of all 120 tickers (auto-derived from composition above)
+# POPULATE: concat all 4 sub-pools after populating each
+tickers: []
+
+# Operational notes
+source_notes: |
+  - Universe is FROZEN per Phase 0 alignment. Re-cut requires explicit operator approval.
+  - Quarterly re-balance review: check VN30/HNX30 index membership changes;
+    re-rank HOSE top50 and UPCOM top10 by trailing-3-month mcap median.
+  - Delistings during backfill window (2019-): keep ticker in universe with
+    `effective_to` flag in ticker_master_v1_seed.csv (companion file).
+  - Survivorship bias mitigation: query historical mcap rankings per year,
+    not current snapshot.

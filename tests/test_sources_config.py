@@ -15,7 +15,7 @@ def write_yaml(tmp_path: Path, content: str) -> Path:
 
 
 def test_load_sources_yaml_accepts_valid_sources_yaml(tmp_path: Path) -> None:
-    from ht_l1_core.sources_config import SourceStatus, load_sources_yaml, validate_source
+    from hlpp_l0_contracts.sources_config import SourceStatus, load_sources_yaml, validate_source
 
     path = write_yaml(
         tmp_path,
@@ -50,7 +50,7 @@ sources:
 
 
 def test_load_sources_yaml_rejects_entry_missing_ops(tmp_path: Path) -> None:
-    from ht_l1_core.sources_config import load_sources_yaml
+    from hlpp_l0_contracts.sources_config import load_sources_yaml
 
     path = write_yaml(
         tmp_path,
@@ -68,7 +68,7 @@ sources:
 
 
 def test_load_sources_yaml_rejects_bad_status_enum(tmp_path: Path) -> None:
-    from ht_l1_core.sources_config import load_sources_yaml
+    from hlpp_l0_contracts.sources_config import load_sources_yaml
 
     path = write_yaml(
         tmp_path,

@@ -20,9 +20,9 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
-from ht_l1_core.schema.lineage import _LineageMixin
-from ht_l1_core.schema.provenance import _BronzeProvenanceMixin
-from ht_l1_core.schema.vintage import _VintageMixin
+from hlpp_l0_contracts.schema.lineage import _LineageMixin
+from hlpp_l0_contracts.schema.provenance import _BronzeProvenanceMixin
+from hlpp_l0_contracts.schema.vintage import _VintageMixin
 
 log = logging.getLogger(__name__)
 

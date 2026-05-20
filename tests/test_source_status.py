@@ -1,4 +1,4 @@
-"""Tests for ht_l1_core.source_status — SourceStatus enum, SourceManifestEntry, emit_skipped_row."""
+"""Tests for hlpp_l0_contracts.source_status — SourceStatus enum, SourceManifestEntry, emit_skipped_row."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ from datetime import date
 
 import pytest
 
-from ht_l1_core.source_status import (
+from hlpp_l0_contracts.source_status import (
     SourceManifestEntry,
     SourceStatus,
     emit_skipped_row,
 )
-from ht_l1_core.schema.crawler_base import CRAWLER_BASE_COLUMNS
+from hlpp_l0_contracts.schema.crawler_base import CRAWLER_BASE_COLUMNS
 
 
 # ---------------------------------------------------------------------------
@@ -180,7 +180,7 @@ def test_emit_skipped_row_source_column_from_arg() -> None:
 def test_emit_skipped_row_logs_warning_for_external_dead(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    with caplog.at_level(logging.WARNING, logger="ht_l1_core.source_status"):
+    with caplog.at_level(logging.WARNING, logger="hlpp_l0_contracts.source_status"):
         emit_skipped_row(
             source="dead-api",
             status=SourceStatus.EXTERNAL_DEAD,
@@ -196,7 +196,7 @@ def test_emit_skipped_row_logs_warning_for_external_dead(
 def test_emit_skipped_row_does_not_warn_for_active(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    with caplog.at_level(logging.WARNING, logger="ht_l1_core.source_status"):
+    with caplog.at_level(logging.WARNING, logger="hlpp_l0_contracts.source_status"):
         emit_skipped_row(
             source="live-api",
             status=SourceStatus.ACTIVE,
@@ -211,7 +211,7 @@ def test_emit_skipped_row_does_not_warn_for_active(
 def test_emit_skipped_row_does_not_warn_for_experimental(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    with caplog.at_level(logging.WARNING, logger="ht_l1_core.source_status"):
+    with caplog.at_level(logging.WARNING, logger="hlpp_l0_contracts.source_status"):
         emit_skipped_row(
             source="exp-api",
             status=SourceStatus.EXPERIMENTAL,

@@ -1,87 +1,36 @@
-"""Public API for HT L1 Core."""
+"""DEPRECATED: ht_l1_core renamed to hlpp_l0_contracts (HLPP v1.0 rebrand 2026-05-20).
 
-from .browser_fetch import (
-    BrowserFetchAuthError,
-    BrowserFetchBadRequest,
-    BrowserFetchClient,
-    BrowserFetchError,
-    BrowserFetchPoolTimeout,
-    BrowserFetchServerError,
-    BrowserFetchTimeoutError,
-    BrowserFetchUnavailable,
-    BrowserFetchUpstreamFailed,
-    Cookie,
-    HealthResult,
-    RenderResult,
-)
-from .collector.base import BaseCollector, RawArticle
-from .llm.provider import AIProvider, AIResponse, ProviderChain
-from .llm.usage import AIUsage, UsageRecord
-from .llm.budget import BudgetExceeded, CostBudgetGuard
-from .http import HttpClient
-from .schema.crawler_base import (
-    CRAWLER_BASE_COLUMNS,
-    CrawlerBaseSchema,
-    _CrawlerBaseMixin,
-)
-from .schema.lineage import LineageSchema, _LineageMixin
-from .schema.provenance import BronzeProvenanceSchema, _BronzeProvenanceMixin
-from .schema.vintage import VintageSchema, _VintageMixin
-from .protocols import (
-    Backfillable,
-    BackfillResult,
-    BackfillTargetYearUnavailable,
-    BarData,
-    TierAStreamConsumer,
-    TierAStreamSession,
-)
-from .sources_config import SourceEntry, load_sources_yaml
-from .idempotency import idempotent_insert, sha256_url
-from .stamping import stamp_for_bronze
+Backward-compat shim — re-routes all submodule imports to hlpp_l0_contracts via sys.modules.
+Removes after Phase 8b cleanup (1 week observation window).
+"""
+import sys
+import warnings
+import hlpp_l0_contracts as _new
 
-__all__ = [
-    # browser_fetch
-    "BrowserFetchClient",
-    "Cookie",
-    "RenderResult",
-    "HealthResult",
-    "BrowserFetchError",
-    "BrowserFetchUnavailable",
-    "BrowserFetchAuthError",
-    "BrowserFetchTimeoutError",
-    "BrowserFetchBadRequest",
-    "BrowserFetchUpstreamFailed",
-    "BrowserFetchPoolTimeout",
-    "BrowserFetchServerError",
-    # collector
-    "BaseCollector",
-    "RawArticle",
-    "ProviderChain",
-    "AIProvider",
-    "AIResponse",
-    "AIUsage",
-    "UsageRecord",
-    "CostBudgetGuard",
-    "BudgetExceeded",
-    "HttpClient",
-    "Backfillable",
-    "BackfillResult",
-    "BackfillTargetYearUnavailable",
-    "BarData",
-    "TierAStreamConsumer",
-    "TierAStreamSession",
-    "_BronzeProvenanceMixin",
-    "BronzeProvenanceSchema",
-    "_LineageMixin",
-    "LineageSchema",
-    "_VintageMixin",
-    "VintageSchema",
-    "_CrawlerBaseMixin",
-    "CrawlerBaseSchema",
-    "CRAWLER_BASE_COLUMNS",
-    "load_sources_yaml",
-    "SourceEntry",
-    "sha256_url",
-    "idempotent_insert",
-    "stamp_for_bronze",
-]
+warnings.warn(
+    "ht_l1_core is deprecated → use hlpp_l0_contracts (HLPP v1.0 rebrand). Shim removes after Phase 8b.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+# Re-route all submodule access to hlpp_l0_contracts equivalents
+_aliases = ["schema", "collector", "llm", "protocols", "browser_fetch",
+            "http", "idempotency", "stamping", "sources_config",
+            "backfillable", "source_status"]
+for _name in _aliases:
+    try:
+        _sub = __import__(f"hlpp_l0_contracts.{_name}", fromlist=[_name])
+        sys.modules[f"ht_l1_core.{_name}"] = _sub
+    except ImportError:
+        pass
+
+# Schema submodules (nested)
+for _sub_name in ["crawler_base", "lineage", "provenance", "vintage"]:
+    try:
+        _sub = __import__(f"hlpp_l0_contracts.schema.{_sub_name}", fromlist=[_sub_name])
+        sys.modules[f"ht_l1_core.schema.{_sub_name}"] = _sub
+    except ImportError:
+        pass
+
+# Top-level re-exports
+from hlpp_l0_contracts import *  # noqa: F401, F403
