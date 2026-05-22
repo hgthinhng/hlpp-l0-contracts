@@ -31,6 +31,9 @@ class HlppNormalizedBase(BaseModel):
     )
     ingested_at: datetime = Field(..., description="Builder run timestamp")
     schema_id: Literal["hlpp-normalized/v1"] = "hlpp-normalized/v1"
+    adjustment_type: Literal[
+        "raw", "backward_adjusted", "forward_adjusted", "unknown"
+    ] = "unknown"
     dataset_id: str = Field(
         ..., description="e.g. 'price-intraday-30s', 'fundamentals-quarterly'"
     )

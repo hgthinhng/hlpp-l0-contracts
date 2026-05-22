@@ -5,5 +5,22 @@ must validate their parquet output against these schemas before write (CI lint e
 """
 from .base import HlppNormalizedBase, HlppComputedBase
 from . import normalized, computed
+from .normalized import (
+    ForeignFlowDaily,
+    FundamentalsQuarterly,
+    PriceDaily,
+    PriceIntraday30s,
+    Ticker360,
+)
 
-__all__ = ["HlppNormalizedBase", "HlppComputedBase", "normalized", "computed"]
+__all__ = [
+    "HlppNormalizedBase",
+    "HlppComputedBase",
+    "normalized",
+    "computed",
+    "ForeignFlowDaily",
+    "FundamentalsQuarterly",
+    "PriceDaily",
+    "PriceIntraday30s",
+    "Ticker360",
+]

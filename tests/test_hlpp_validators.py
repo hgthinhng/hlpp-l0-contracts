@@ -22,6 +22,7 @@ def _normalized_row(**overrides):
         "vendor": "vnstock",
         "ingested_at": datetime(2026, 5, 20, 16, 0, tzinfo=timezone.utc),
         "schema_id": "hlpp-normalized/v1",
+        "adjustment_type": "backward_adjusted",
         "dataset_id": "price-daily",
         "builder_version": "abc1234",
     }

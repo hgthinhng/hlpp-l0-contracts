@@ -8,7 +8,12 @@ from pydantic import ValidationError
 
 from hlpp_l0_contracts.schemas.base import HlppComputedBase, HlppNormalizedBase
 from hlpp_l0_contracts.schemas.computed import FactorSize, RegimeMarkovVnindex
-from hlpp_l0_contracts.schemas.normalized import PriceDaily, Ticker360
+from hlpp_l0_contracts.schemas.normalized import (
+    ForeignFlowDaily,
+    PriceDaily,
+    PriceIntraday30s,
+    Ticker360,
+)
 
 
 # Shared identity columns (no dataset_id — caller supplies per scenario)
@@ -41,6 +46,7 @@ def test_normalized_base_accepts_canonical_row():
     assert row.ticker == "HPG"
     assert row.schema_id == "hlpp-normalized/v1"
     assert row.vendor == "vnstock"
+    assert row.adjustment_type == "unknown"
 
 
 def test_normalized_base_is_frozen():
@@ -93,6 +99,34 @@ def test_normalized_payload_subclass_validates_price_daily():
         value=26_000_000.0,
     )
     assert row.close_adjusted == 26.0
+    assert row.adjustment_type == "backward_adjusted"
+
+def test_normalized_payload_subclasses_set_adjustment_type_defaults():
+    intraday = PriceIntraday30s(
+        **dict(NORMALIZED_SAMPLE, vendor="fqx", dataset_id="price-intraday-30s"),
+        open=25.0,
+        high=26.5,
+        low=24.8,
+        close=26.0,
+        volume=1_000_000,
+        value=26_000_000.0,
+    )
+    assert intraday.adjustment_type == "raw"
+
+    foreign_flow = ForeignFlowDaily(
+        **dict(NORMALIZED_SAMPLE, dataset_id="foreign-flow-daily"),
+        buy_volume=1_000,
+        sell_volume=500,
+        buy_value=25_000_000.0,
+        sell_value=12_000_000.0,
+        net_volume=500,
+        net_value=13_000_000.0,
+    )
+    assert foreign_flow.adjustment_type == "raw"
+
+def test_normalized_rejects_unknown_adjustment_type_value():
+    with pytest.raises(ValidationError):
+        HlppNormalizedBase(**dict(NORMALIZED_SAMPLE, adjustment_type="split_adjusted"))
 
 
 def test_normalized_payload_rejects_negative_volume():

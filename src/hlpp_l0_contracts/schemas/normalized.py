@@ -10,14 +10,17 @@ Per spec §9 classification (11 L1b datasets):
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import Field
 
 from .base import HlppNormalizedBase
 
 
 class PriceIntraday30s(HlppNormalizedBase):
-    """30-second OHLC bars from m12-fqx-ohlcv-intraday tick stream."""
+    """30-second OHLC bars from m12-fqx-ohlcv-intraday raw snapshots."""
 
+    adjustment_type: Literal["raw"] = "raw"
     open: float = Field(..., ge=0)
     high: float = Field(..., ge=0)
     low: float = Field(..., ge=0)
@@ -29,6 +32,7 @@ class PriceIntraday30s(HlppNormalizedBase):
 class PriceDaily(HlppNormalizedBase):
     """Daily OHLC + adjustments from vnstock VCI EOD."""
 
+    adjustment_type: Literal["backward_adjusted"] = "backward_adjusted"
     open: float = Field(..., ge=0)
     high: float = Field(..., ge=0)
     low: float = Field(..., ge=0)
@@ -41,6 +45,7 @@ class PriceDaily(HlppNormalizedBase):
 class ForeignFlowDaily(HlppNormalizedBase):
     """Daily foreign buy/sell flow aggregate."""
 
+    adjustment_type: Literal["raw"] = "raw"
     buy_volume: int = Field(..., ge=0)
     sell_volume: int = Field(..., ge=0)
     buy_value: float = Field(..., ge=0)
@@ -79,3 +84,11 @@ class Ticker360(HlppNormalizedBase):
 # TODO: Add remaining 6 L1b payload classes during Phase 4 builder migration:
 # - BlockDeals, InsiderTrades, LargeShareholders, CorpEventsParsed,
 #   IndexDaily, LiquidityFiltersDaily
+
+__all__ = [
+    "ForeignFlowDaily",
+    "FundamentalsQuarterly",
+    "PriceDaily",
+    "PriceIntraday30s",
+    "Ticker360",
+]
