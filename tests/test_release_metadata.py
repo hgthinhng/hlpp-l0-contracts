@@ -7,10 +7,10 @@ import tomllib
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_pyproject_version_is_0_2_0() -> None:
+def test_pyproject_version_is_0_3_0() -> None:
     pyproject = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())
 
-    assert pyproject["project"]["version"] == "0.2.0"
+    assert pyproject["project"]["version"] == "0.3.0"
 
 
 def test_changelog_records_0_1_5_protocol_release() -> None:
