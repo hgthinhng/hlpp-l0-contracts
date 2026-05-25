@@ -5,7 +5,7 @@ Defines Pydantic base models + per-dataset payload schemas. All L1b/L2 builders
 must validate their parquet output against these schemas before write (CI lint enforces).
 """
 from .base import HlppNormalizedBase, HlppComputedBase
-from . import normalized, computed
+from . import normalized, computed, research_papers
 from .normalized import (
     ForeignFlowDaily,
     FundamentalsQuarterly,
@@ -14,12 +14,14 @@ from .normalized import (
     Ticker360,
 )
 from .alt_data import AlternativeDataBase, GenericAltObservation
+from .research_papers import PaperType, ResearchPaperV1, ResearchSource
 
 __all__ = [
     "HlppNormalizedBase",
     "HlppComputedBase",
     "normalized",
     "computed",
+    "research_papers",
     "ForeignFlowDaily",
     "FundamentalsQuarterly",
     "PriceDaily",
@@ -27,4 +29,7 @@ __all__ = [
     "Ticker360",
     "AlternativeDataBase",
     "GenericAltObservation",
+    "ResearchPaperV1",
+    "ResearchSource",
+    "PaperType",
 ]

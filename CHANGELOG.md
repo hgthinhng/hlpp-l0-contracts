@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.4.0 - 2026-05-26
+
+**Wave 8 research-papers contract**
+
+- **NEW `hlpp_l0_contracts.schemas.research_papers`** — Pydantic `ResearchPaperV1`
+  contract for Wave 8 academic-paper collectors (SSRN, RePEc, AMRO, IMF working-papers,
+  OECD, Heliyon, VEPR, Fulbright FSPPM). Monthly PDF + metadata polling.
+  - Required fields: `paper_id` (DOI or hash), `source` (8-source enum), `title`,
+    `authors` (non-empty list), `published_at`, `language` (ISO 639-1), `as_of_date`
+    (PIT partition key).
+  - Optional: `abstract`, `pdf_url`, `doi` (canonical 10.NNNN/... form),
+    `keywords`, `ticker_mentions` (populated by L2 TickerResolver NLP; L0 leaves
+    `[]`), `paper_type` (`working_paper` / `journal` / `policy_brief` /
+    `conference`), `institution`, `source_metadata` (vendor-specific raw fields).
+  - Validators: PIT discipline (`as_of_date >= published_at`), DOI regex,
+    language ISO 639-1, paper_id charset, non-empty authors+title.
+  - `extra="forbid"` + `frozen=True` per existing L0 schema discipline.
+- Re-exported from `hlpp_l0_contracts.schemas` package surface as `ResearchPaperV1`,
+  `ResearchSource`, `PaperType` for downstream collector + L2 NLP consumers.
+- **Tests:** +35 new tests in `test_research_papers_schema.py` covering enum,
+  PIT discipline, DOI canonical form, frozen model, optional defaults,
+  round-trip dict, and ISO 639-1 language enforcement.
+- **Version:** `0.3.0` → `0.4.0` (minor bump; backward-compatible additive).
+
 ## 0.2.0 - 2026-05-21
 
 **HLPP rebrand + foundation contracts**
