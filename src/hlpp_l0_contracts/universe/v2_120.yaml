@@ -1,39 +1,70 @@
-# HLPP-UNIVERSE v2_120 (Elon first-principles, 2026-05-20)
+# HLPP-UNIVERSE v2_120 (Elon first-principles, snapshot 2026-05-25)
 #
 # Cấu trúc 120 tickers, chiếm ≥85% Mcap + Mvolume thị trường VN.
-# Tickers cụ thể PHẢI populate từ vendor query (vnstock VCI exchange info + mcap rank)
-# trước Phase 8a backfill. Hiện chỉ skeleton + sub-pool sizing.
+# Populated 2026-05-25 từ vnstock VCI sponsor tier (silver).
+# - VN30 / HNX30: official index constituents (listing.symbols_by_group)
+# - HOSE top50 ex-VN30: mcap rank (listed_share × match_price từ price_board),
+#   filter type=='stock' (exclude ETF/fund/CW/bond/future)
+# - UPCOM top10: cùng phương pháp
 
 version: v2_120
-generated_at: 2026-05-20
+generated_at: 2026-05-25
 total: 120
 target_coverage_mcap_pct: 85
 target_coverage_volume_pct: 85
 
+data_source: "vnstock 4.0.2 (sponsor silver tier) · source=VCI · listing.symbols_by_group + listing.symbols_by_exchange + trading.price_board mcap rank · snapshot 2026-05-25"
+
 composition:
   vn30:
     size: 30
-    source: "Official VN30 index constituents (HOSE)"
-    tickers: []  # POPULATE: copy current VN30 list
+    source: "Official VN30 index constituents (HOSE) via vnstock listing.symbols_by_group('VN30')"
+    tickers:
+      [ACB, BID, BSR, CTG, FPT, GAS, GVR, HDB, HPG, LPB,
+       MBB, MSN, MWG, PLX, SAB, SHB, SSB, SSI, STB, TCB,
+       TPB, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VPL, VRE]
   hose_top50_ex_vn30:
     size: 50
-    source: "HOSE market-cap rank, excluding VN30"
-    tickers: []  # POPULATE: query vnstock VCI mcap rank
+    source: "HOSE market-cap rank (listed_share × match_price) excluding VN30, type=='stock'"
+    tickers:
+      [BAF, BCM, BMP, BVH, CII, DCM, DGC, DHG, DIG, DPM,
+       DXG, EIB, FRT, GEE, GEL, GEX, GMD, HAG, HCM, HVN,
+       KBC, KDC, KDH, MCH, MSB, NAB, NLG, NVL, OCB, PDR,
+       PGV, PNJ, POW, PVD, REE, SBT, SIP, SJS, TAL, TCH,
+       TCX, VCG, VCI, VCK, VGC, VHC, VIX, VND, VPI, VPX]
   hnx30:
     size: 30
-    source: "Official HNX30 index constituents (HNX)"
-    tickers: []  # POPULATE: copy current HNX30 list
+    source: "Official HNX30 index constituents (HNX) via vnstock listing.symbols_by_group('HNX30')"
+    tickers:
+      [BVS, CAP, CEO, DP3, DTD, DVM, DXP, HUT, IDC, IDV,
+       L14, L18, LAS, LHC, MBS, NDN, NTP, PLC, PSD, PVB,
+       PVC, PVS, SHS, SLS, TMB, TNG, TVD, VC3, VCS, VFS]
   upcom_top10:
     size: 10
-    source: "UPCOM market-cap rank top 10"
-    tickers: []  # POPULATE: query vnstock VCI mcap rank
+    source: "UPCOM market-cap rank top 10 (listed_share × match_price), type=='stock'"
+    tickers:
+      [ABB, ACV, CC1, F88, FOX, MSR, QNS, VEA, VEF, VGI]
 
-# Flat list of all 120 tickers (auto-derived from composition above)
-# POPULATE: concat all 4 sub-pools after populating each
-tickers: []
+# Flat list of all 120 tickers (union of 4 sub-pools, alphabetically sorted)
+tickers:
+  [ABB, ACB, ACV, BAF, BCM, BID, BMP, BSR, BVH, BVS,
+   CAP, CC1, CEO, CII, CTG, DCM, DGC, DHG, DIG, DP3,
+   DPM, DTD, DVM, DXG, DXP, EIB, F88, FOX, FPT, FRT,
+   GAS, GEE, GEL, GEX, GMD, GVR, HAG, HCM, HDB, HPG,
+   HUT, HVN, IDC, IDV, KBC, KDC, KDH, L14, L18, LAS,
+   LHC, LPB, MBB, MBS, MCH, MSB, MSN, MSR, MWG, NAB,
+   NDN, NLG, NTP, NVL, OCB, PDR, PGV, PLC, PLX, PNJ,
+   POW, PSD, PVB, PVC, PVD, PVS, QNS, REE, SAB, SBT,
+   SHB, SHS, SIP, SJS, SLS, SSB, SSI, STB, TAL, TCB,
+   TCH, TCX, TMB, TNG, TPB, TVD, VC3, VCB, VCG, VCI,
+   VCK, VCS, VEA, VEF, VFS, VGC, VGI, VHC, VHM, VIB,
+   VIC, VIX, VJC, VND, VNM, VPB, VPI, VPL, VPX, VRE]
 
 # Operational notes
 source_notes: |
+  - Snapshot 2026-05-25 via vnstock VCI sponsor (silver tier, account
+    Hung Thinh Nguyen). Drift risk: VN30/HNX30 rebalance quarterly (HOSE/HNX
+    publishes new constituents); mcap ranks shift continuously.
   - Universe is FROZEN per Phase 0 alignment. Re-cut requires explicit operator approval.
   - Quarterly re-balance review: check VN30/HNX30 index membership changes;
     re-rank HOSE top50 and UPCOM top10 by trailing-3-month mcap median.
@@ -41,3 +72,5 @@ source_notes: |
     `effective_to` flag in ticker_master_v1_seed.csv (companion file).
   - Survivorship bias mitigation: query historical mcap rankings per year,
     not current snapshot.
+  - HOSE top50 filter excludes ETFs/funds (FUEVFVND etc) by type=='stock';
+    BAF replaced FUEVFVND vs raw rank for stock-only constraint.
