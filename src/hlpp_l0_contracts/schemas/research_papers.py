@@ -37,6 +37,12 @@ ResearchSource = Literal[
     "heliyon",
     "vepr",
     "fulbright_fsppm",
+    # Wave 8.1 expansion (2026-05-26) — 3-LLM consensus academic gap closure.
+    "wb_prwp",  # World Bank Policy Research Working Papers
+    "adb_wp",  # ADB Economics Working Papers
+    "bis_wp",  # BIS Working Papers
+    "ueh_jabes",  # UEH Journal of Asian Business and Economic Studies
+    "neu_journals",  # NEU domestic journals (Vietnamese-language)
 ]
 
 PaperType = Literal[
