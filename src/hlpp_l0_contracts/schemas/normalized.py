@@ -49,8 +49,16 @@ class PriceDaily(HlppNormalizedBase):
     low: float = Field(..., ge=0)
     close: float = Field(..., ge=0)
     close_adj: float = Field(..., ge=0, description="Split + dividend backward-adjusted close")
-    volume: int = Field(..., ge=0)
-    value_traded: float = Field(..., ge=0, description="Total session traded value (VND)")
+    volume: float = Field(..., ge=0, description="Volume (float to accept FQX Float64 output)")
+    value_traded: float | None = Field(
+        None,
+        ge=0,
+        description=(
+            "Total session traded value (VND). "
+            "Null for vnstock-fallback rows (vendor does not provide value_traded); "
+            "non-null for FQX rows."
+        ),
+    )
 
 
 class ForeignFlowDaily(HlppNormalizedBase):
@@ -62,11 +70,21 @@ class ForeignFlowDaily(HlppNormalizedBase):
     """
 
     adjustment_type: Literal["raw"] = "raw"
-    foreign_buy_volume: int = Field(..., ge=0)
-    foreign_sell_volume: int = Field(..., ge=0)
+    foreign_buy_volume: float = Field(
+        ..., ge=0, description="Foreign buy volume (Float64; vendor emits float not int)"
+    )
+    foreign_sell_volume: float = Field(
+        ..., ge=0, description="Foreign sell volume (Float64; vendor emits float not int)"
+    )
     foreign_buy_value: float = Field(..., ge=0)
     foreign_sell_value: float = Field(..., ge=0)
-    foreign_net_volume: int  # can be negative
+    foreign_net_volume: float | None = Field(
+        None,
+        description=(
+            "Foreign net volume (buy − sell). "
+            "Not present in all m12-fqx-foreign-flow-v1 feeds; null when absent."
+        ),
+    )
     foreign_net_value: float
 
 
@@ -315,8 +333,13 @@ class CorpEventsParsed(HlppNormalizedBase):
     """
 
     adjustment_type: Literal["raw"] = "raw"
-    event_date: date = Field(
-        ..., description="Resolved event date via per-event-type precedence rules"
+    event_date: date | None = Field(
+        None,
+        description=(
+            "Resolved event date via per-event-type precedence rules. "
+            "Null when all vendor date fields are missing/unparseable (DEGRADED row); "
+            "business_date is set to as_of_date in that case."
+        ),
     )
     event_type: str = Field(
         ...,
