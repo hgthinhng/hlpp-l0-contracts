@@ -229,7 +229,13 @@ class ReportTextNormalized(HlppNormalizedBase):
     char_count: int = Field(..., ge=0)
     page_count: int = Field(..., ge=0, description="0 for HTML/summary inputs")
     content_hash: str = Field(
-        ..., description="sha256:HEX of body_text; '' when status != OK"
+        ...,
+        description=(
+            "Row-level provenance struct-hash (Utf8) set by stamp_silver_per_row. "
+            "NOT a sha256 of body_text — the column is overwritten by the stamping layer "
+            "with a polars struct-hash. If a content digest of body_text is needed, "
+            "add a separate field (e.g. body_text_sha256)."
+        ),
     )
     extracted_via: Literal["pdfplumber", "html_summary", "html_body"] = "pdfplumber"
     # Renamed from "status" to avoid collision with the silver-stamping
