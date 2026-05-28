@@ -12,6 +12,7 @@ from hlpp_l0_contracts.schemas.normalized import (
     ForeignFlowDaily,
     PriceDaily,
     PriceIntraday30s,
+    ReportTextNormalized,
     Ticker360,
 )
 
@@ -160,6 +161,91 @@ def test_computed_payload_subclass_factor_size():
         market_cap=15_000_000_000.0,
     )
     assert row.score == -3.21
+
+
+def test_report_text_normalized_canonical_row():
+    row = ReportTextNormalized(
+        **dict(NORMALIZED_SAMPLE, vendor="internal", dataset_id="report-text-daily"),
+        source_id="masvn_research",
+        ctck_source="MASVN",
+        title="HPG - Báo cáo cập nhật",
+        report_date=date(2026, 5, 27),
+        landing_url="https://www.masvn.com/cate/x",
+        pdf_url="https://masvn.com/api/attachment/file/123-HPG.pdf",
+        ticker_mentions=["HPG"],
+        body_text="MUA HPG. Giá mục tiêu 36.600 VND.",
+        char_count=33,
+        page_count=4,
+        content_hash="sha256:abc123",
+        extracted_via="pdfplumber",
+        extraction_status="OK",
+        observation_id="11111111-1111-5111-8111-111111111111",
+    )
+    assert row.source_id == "masvn_research"
+    assert row.ctck_source == "MASVN"
+    assert row.ticker_mentions == ["HPG"]
+    assert row.extraction_status == "OK"
+    assert row.adjustment_type == "raw"
+    assert row.vendor == "internal"
+
+
+def test_report_text_normalized_failure_row_keeps_empty_body():
+    row = ReportTextNormalized(
+        **dict(NORMALIZED_SAMPLE, vendor="internal", dataset_id="report-text-daily"),
+        source_id="dsc_research",
+        ctck_source=None,
+        title="DSC report",
+        body_text="",
+        char_count=0,
+        page_count=0,
+        content_hash="",
+        extracted_via="pdfplumber",
+        extraction_status="PDF_FETCH_FAILED",
+        fetch_error="HTTP 404",
+        observation_id="22222222-2222-5222-8222-222222222222",
+    )
+    assert row.body_text == ""
+    assert row.extraction_status == "PDF_FETCH_FAILED"
+    assert row.fetch_error == "HTTP 404"
+    assert row.ticker_mentions == []
+
+
+def test_report_text_normalized_rejects_unknown_status():
+    payload = dict(
+        NORMALIZED_SAMPLE,
+        vendor="internal",
+        dataset_id="report-text-daily",
+        source_id="vndirect_research",
+        title="x",
+        body_text="x",
+        char_count=1,
+        page_count=0,
+        content_hash="sha256:abc",
+        extracted_via="html_summary",
+        extraction_status="UNKNOWN_STATUS_LITERAL",
+        observation_id="33333333-3333-5333-8333-333333333333",
+    )
+    with pytest.raises(ValidationError):
+        ReportTextNormalized(**payload)
+
+
+def test_report_text_normalized_rejects_non_internal_vendor():
+    payload = dict(
+        NORMALIZED_SAMPLE,
+        vendor="fqx",  # report_text is vendor="internal" only
+        dataset_id="report-text-daily",
+        source_id="masvn_research",
+        title="x",
+        body_text="x",
+        char_count=1,
+        page_count=0,
+        content_hash="sha256:abc",
+        extracted_via="pdfplumber",
+        extraction_status="OK",
+        observation_id="44444444-4444-5444-8444-444444444444",
+    )
+    with pytest.raises(ValidationError):
+        ReportTextNormalized(**payload)
 
 
 def test_regime_markov_probability_bounded():

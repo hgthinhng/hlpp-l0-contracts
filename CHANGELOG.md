@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.3 - 2026-05-28
+
+**`ReportTextNormalized` L1b payload schema**
+
+- **SCHEMA**: add `ReportTextNormalized` to `schemas/normalized.py` for the new
+  L1b silver `silver_report_text_daily` (hlpp-pipelines). Carries raw analyst
+  report / market-commentary text pulled by `ai-api-crawlers` text-only
+  wirings (PDF → pdfplumber → boilerplate strip → body_text). Payload columns:
+  `source_id`, `ctck_source`, `title`, `report_date`, `landing_url`,
+  `pdf_url`, `ticker_mentions`, `body_text`, `char_count`, `page_count`,
+  `content_hash`, `extracted_via` (Literal pdfplumber/html_summary/html_body),
+  `status` (Literal OK/PDF_FETCH_FAILED/INVALID_PDF/NO_TEXT_EXTRACTED),
+  `fetch_error`, `origin_observation_id`, `observation_id`. `vendor` pinned
+  to `"internal"`. Additive, backward-compatible.
+
 ## 0.4.2 - 2026-05-28
 
 **`report_text` source family**
