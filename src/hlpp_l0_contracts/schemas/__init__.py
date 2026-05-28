@@ -7,10 +7,19 @@ must validate their parquet output against these schemas before write (CI lint e
 from .base import HlppNormalizedBase, HlppComputedBase
 from . import normalized, computed, research_papers
 from .normalized import (
+    BlockDeals,
+    CorpEventsParsed,
     ForeignFlowDaily,
+    FundamentalsAnnual,
     FundamentalsQuarterly,
+    IndexDaily,
+    InsiderTrades,
+    IntradaySnapshot,
+    LargeShareholders,
+    LiquidityFiltersDaily,
     PriceDaily,
     PriceIntraday30s,
+    ReportTextNormalized,
     Ticker360,
 )
 from .alt_data import AlternativeDataBase, GenericAltObservation
@@ -22,13 +31,25 @@ __all__ = [
     "normalized",
     "computed",
     "research_papers",
+    # L1b normalized contracts
+    "BlockDeals",
+    "CorpEventsParsed",
     "ForeignFlowDaily",
+    "FundamentalsAnnual",
     "FundamentalsQuarterly",
+    "IndexDaily",
+    "InsiderTrades",
+    "IntradaySnapshot",
+    "LargeShareholders",
+    "LiquidityFiltersDaily",
     "PriceDaily",
     "PriceIntraday30s",
+    "ReportTextNormalized",
     "Ticker360",
+    # L1a alt-data contracts
     "AlternativeDataBase",
     "GenericAltObservation",
+    # Research papers
     "ResearchPaperV1",
     "ResearchSource",
     "PaperType",
