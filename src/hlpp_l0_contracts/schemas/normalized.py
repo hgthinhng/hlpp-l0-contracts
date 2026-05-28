@@ -71,17 +71,90 @@ class ForeignFlowDaily(HlppNormalizedBase):
 
 
 class FundamentalsQuarterly(HlppNormalizedBase):
-    """Quarterly BCTC fundamentals — normalized 3 statements."""
+    """Quarterly BCTC fundamentals — surface-aware unified schema (5 surfaces).
 
-    fiscal_year: int = Field(..., ge=2000, le=2100)
-    fiscal_quarter: int = Field(..., ge=1, le=4)
-    revenue: float | None = None
-    net_income: float | None = None
+    Mirrors FundamentalsAnnual's 44-column surface-aware schema (see that class
+    for column-group documentation) but at quarterly granularity: ``period`` is a
+    quarter string (e.g. '2025-Q4') and ``tet_q1_seasonal_flag`` marks Q1 rows of
+    Tet-affected (FMCG/retail) issuers.
+
+    Source: 5 BCTC m12 contracts routed via ICB → surface mapping, quarterly periods.
+    PK: (ticker, period_end_date). Surface-specific columns are NULL for rows
+    belonging to other surfaces; ``bctc_surface`` indicates which group is populated.
+
+    REVISION (2026-05-29, Decision-A Task B / Wave 3): replaced the prior generic
+    stub (fiscal_year/fiscal_quarter/revenue/net_income/eps/book_value_per_share)
+    which was structurally incompatible with the surface-aware builder output.
+    """
+
+    adjustment_type: Literal["raw"] = "raw"
+
+    # Identity
+    period: str | None = Field(None, description="Fiscal quarter string e.g. '2025-Q4'")
+    period_end_date: date | None = Field(None, description="Fiscal quarter end date")
+    report_type: str | None = Field(None, description="'quarter' for quarterly rows")
+    accounting_framework: str | None = Field(None, description="e.g. VAS / IFRS")
+    bctc_surface: str = Field(
+        ...,
+        description="BCTC routing surface: general / bank / securities / insurance / fund",
+    )
+
+    # Universal (all 5 surfaces)
+    net_profit_after_tax: float | None = None
     total_assets: float | None = None
+    roe: float | None = None
+
+    # Common-4 (general/bank/securities/insurance; null for fund)
     total_equity: float | None = None
+    eps_basic: float | None = None
+    bvps: float | None = None
+    roa: float | None = None
+
+    # General-only
+    net_sales: float | None = None
+    gross_profit: float | None = None
+    operating_profit: float | None = None
     total_debt: float | None = None
-    eps: float | None = None
-    book_value_per_share: float | None = None
+    cash: float | None = None
+    operating_cash_flow: float | None = None
+    eps_diluted: float | None = None
+    pe_ratio: float | None = None
+    pb_ratio: float | None = None
+
+    # Bank-only
+    net_interest_income: float | None = None
+    loans_to_customers: float | None = None
+    deposits_from_customers: float | None = None
+    npl_ratio: float | None = None
+    capital_adequacy_ratio: float | None = None
+    tier1_capital_ratio: float | None = None
+    nim: float | None = None
+
+    # Securities-only
+    brokerage_revenue: float | None = None
+    proprietary_trading_pnl: float | None = None
+    margin_lending_interest_income: float | None = None
+    margin_loans_outstanding: float | None = None
+    trading_securities: float | None = None
+
+    # Insurance-only
+    gross_written_premium: float | None = None
+    net_written_premium: float | None = None
+    claims_incurred: float | None = None
+    combined_ratio: float | None = None
+    solvency_capital_ratio: float | None = None
+
+    # Fund-only
+    total_aum: float | None = None
+    total_nav: float | None = None
+    nav_per_unit: float | None = None
+    units_outstanding: float | None = None
+    expense_ratio: float | None = None
+
+    # Quarterly-specific
+    tet_q1_seasonal_flag: bool | None = Field(
+        None, description="True on Q1 rows of Tet-affected (FMCG/retail) issuers"
+    )
 
 
 class Ticker360(HlppNormalizedBase):
