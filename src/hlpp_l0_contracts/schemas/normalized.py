@@ -35,28 +35,39 @@ class PriceIntraday30s(HlppNormalizedBase):
 
 
 class PriceDaily(HlppNormalizedBase):
-    """Daily OHLC + adjustments from vnstock VCI EOD."""
+    """Daily OHLC + adjustments from vnstock VCI EOD / FQX adjusted.
+
+    Field names match the stable builder output columns (v3.1+):
+    - ``close_adj``: split + dividend backward-adjusted close (was ``close_adjusted`` pre-v3.1)
+    - ``value_traded``: total session traded value in VND (was ``value`` pre-v3.1)
+    ``business_time`` from the base is irrelevant for daily bars and is left null.
+    """
 
     adjustment_type: Literal["backward_adjusted"] = "backward_adjusted"
     open: float = Field(..., ge=0)
     high: float = Field(..., ge=0)
     low: float = Field(..., ge=0)
     close: float = Field(..., ge=0)
-    close_adjusted: float = Field(..., ge=0, description="Split + dividend adjusted")
+    close_adj: float = Field(..., ge=0, description="Split + dividend backward-adjusted close")
     volume: int = Field(..., ge=0)
-    value: float = Field(..., ge=0)
+    value_traded: float = Field(..., ge=0, description="Total session traded value (VND)")
 
 
 class ForeignFlowDaily(HlppNormalizedBase):
-    """Daily foreign buy/sell flow aggregate."""
+    """Daily foreign buy/sell flow aggregate.
+
+    Field names use the ``foreign_`` prefix matching the stable builder output columns
+    (silver_foreign_flow_daily _PAYLOAD_COLUMNS). The prefix distinguishes foreign-investor
+    flow from total-market flow and matches the FQX vendor field naming convention.
+    """
 
     adjustment_type: Literal["raw"] = "raw"
-    buy_volume: int = Field(..., ge=0)
-    sell_volume: int = Field(..., ge=0)
-    buy_value: float = Field(..., ge=0)
-    sell_value: float = Field(..., ge=0)
-    net_volume: int  # can be negative
-    net_value: float
+    foreign_buy_volume: int = Field(..., ge=0)
+    foreign_sell_volume: int = Field(..., ge=0)
+    foreign_buy_value: float = Field(..., ge=0)
+    foreign_sell_value: float = Field(..., ge=0)
+    foreign_net_volume: int  # can be negative
+    foreign_net_value: float
 
 
 class FundamentalsQuarterly(HlppNormalizedBase):
