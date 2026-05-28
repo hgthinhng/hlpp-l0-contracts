@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.2 - 2026-05-28
+
+**`report_text` source family**
+
+- **SCHEMA**: extend `SourceFamily` `Literal` with `"report_text"` for the
+  text-only enricher tier (PDF/HTML → relevant text, no LLM). Additive,
+  backward-compatible. Consumed by `ai-api-crawlers/text/ReportTextExtractor`
+  to emit raw analyst-report text observations that the downstream
+  sentiment/tone/numbers tier reads.
+
 ## 0.4.0 - 2026-05-26
 
 **Wave 8 research-papers contract**

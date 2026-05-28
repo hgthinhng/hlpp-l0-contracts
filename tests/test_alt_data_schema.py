@@ -107,6 +107,7 @@ def test_valid_source_families():
         "sentiment",
         "trade",
         "geospatial",
+        "report_text",
     ]
     for family in valid_families:
         row = AlternativeDataBase(**{**VALID_SAMPLE, "source_family": family})

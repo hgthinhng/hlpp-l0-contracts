@@ -28,6 +28,7 @@ SourceFamily = Literal[
     "sentiment",
     "trade",
     "geospatial",
+    "report_text",
 ]
 
 
@@ -56,7 +57,7 @@ class AlternativeDataBase(BaseModel):
         ...,
         description=(
             "Source family classification: macro, forum, satellite, web3, maritime, "
-            "academic, governance, sentiment, trade, geospatial"
+            "academic, governance, sentiment, trade, geospatial, report_text"
         ),
     )
     observation_id: str = Field(
