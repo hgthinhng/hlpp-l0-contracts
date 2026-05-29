@@ -572,6 +572,66 @@ class IntradaySnapshot(_HlppTierBBase):
     day_value_vnd: float = Field(..., ge=0, description="Cumulative tick traded value (VND)")
 
 
+class NewsHeadlineNormalized(HlppNormalizedBase):
+    """One normalized headline row from VN news/disclosure sources.
+
+    Sources: hose_news (HSX API), cafef_per_ticker (CafeF per-ticker page),
+    rss (Vietnamese-language RSS feeds). NO sentiment/scoring — raw text
+    normalization only. That is an L2 concern.
+
+    Row granularity: ONE row per headline URL (or per source_id+headline+date
+    when URL is absent). Headlines without a ticker association use
+    ticker="MARKET".
+
+    Dedup key: url (preferred) or (source_id, headline, published_date).
+    """
+
+    vendor: Literal["internal"] = "internal"
+    adjustment_type: Literal["raw"] = "raw"
+
+    # Source identification
+    source_id: str = Field(
+        ...,
+        description=(
+            "Upstream collector source_id: 'hose_news' / 'cafef_per_ticker' / "
+            "RSS feed id (e.g. 'vnexpress_kinhdoanh')"
+        ),
+    )
+
+    # Headline content
+    headline: str = Field(..., min_length=1, description="Article title / headline text")
+    url: str | None = Field(None, description="Canonical article URL; null for API-only sources")
+    published_at: datetime | None = Field(
+        None, description="Publisher-reported publish timestamp (UTC-aware when available)"
+    )
+    published_date: date | None = Field(
+        None, description="Date part of published_at; null when published_at is null"
+    )
+    summary: str | None = Field(
+        None, description="Short snippet / lead paragraph if provided by source; null otherwise"
+    )
+
+    # Ticker association (optional — many headlines are market-wide)
+    tickers: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Uppercase ticker codes mentioned / associated with this headline. "
+            "Empty list for market-wide headlines (ticker='MARKET' on base). "
+            "Set to [ticker] for per-ticker source pulls (cafef_per_ticker)."
+        ),
+    )
+
+    # Dedup + lineage
+    headline_id: str = Field(
+        ...,
+        description=(
+            "uuid5 over dedup key: url when present, else "
+            "(source_id, headline[:120], published_date_iso). Stable across re-runs."
+        ),
+    )
+    language: str = Field("vi", description="ISO 639-1 language code of the headline")
+
+
 __all__ = [
     "BlockDeals",
     "CorpEventsParsed",
@@ -583,6 +643,7 @@ __all__ = [
     "IntradaySnapshot",
     "LargeShareholders",
     "LiquidityFiltersDaily",
+    "NewsHeadlineNormalized",
     "PriceDaily",
     "PriceIntraday30s",
     "ReportTextNormalized",
