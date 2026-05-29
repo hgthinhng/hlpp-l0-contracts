@@ -5,7 +5,6 @@ Removes after Phase 8b cleanup (1 week observation window).
 """
 import sys
 import warnings
-import hlpp_l0_contracts as _new
 
 warnings.warn(
     "ht_l1_core is deprecated → use hlpp_l0_contracts (HLPP v1.0 rebrand). Shim removes after Phase 8b.",
@@ -33,4 +32,4 @@ for _sub_name in ["crawler_base", "lineage", "provenance", "vintage"]:
         pass
 
 # Top-level re-exports
-from hlpp_l0_contracts import *  # noqa: F401, F403
+from hlpp_l0_contracts import *  # noqa: F401, F403, E402
