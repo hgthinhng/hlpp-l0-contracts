@@ -271,7 +271,7 @@ wheels = [
 
 [[package]]
 name = "hlpp-l0-contracts"
-version = "0.5.1"
+version = "0.5.4"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

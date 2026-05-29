@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from pydantic import BaseModel
+
 from .schemas.base import HlppComputedBase, HlppNormalizedBase
 
 if TYPE_CHECKING:
@@ -68,7 +70,7 @@ def validate_computed(
 
 # ─── Internal checks ────────────────────────────────────────────────
 
-def _validate_mandatory_cols(df: Any, base_cls: type, label: str) -> None:
+def _validate_mandatory_cols(df: Any, base_cls: type[BaseModel], label: str) -> None:
     required = set(base_cls.model_fields.keys())
     actual = set(df.columns)
     missing = required - actual
@@ -106,7 +108,7 @@ def _validate_domain(df: Any, expected: str) -> None:
         )
 
 
-def _validate_sample_rows(df: Any, base_cls: type, n: int) -> None:
+def _validate_sample_rows(df: Any, base_cls: type[BaseModel], n: int) -> None:
     sample = df.head(n).to_dict(orient="records")
     for i, row in enumerate(sample):
         try:
