@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.3 - 2026-05-29
+
+**Inline validation alignment: business_date + contract field fixes (Gate 6.1 / Decision-A)**
+
+- **FIX `PriceDaily`**: `value_traded` → `float | None` (vnstock-fallback rows lack this field);
+  `volume` type relaxed to `float` (FQX emits Float64, not int).
+- **FIX `ForeignFlowDaily`**: `foreign_buy_volume` / `foreign_sell_volume` → `float` (vendor
+  emits Float64); `foreign_net_volume` → `float | None` (not present in all m12 feeds).
+- **FIX `CorpEventsParsed`**: `event_date` → `date | None` (DEGRADED rows with all-null vendor
+  date fields emit null event_date, marked via `degraded_blocks="unparseable_date"`).
+- **NOTE**: `business_date` (required on `HlppNormalizedBase`) is now populated by all 12
+  ADR-022 L1b builders. Tier-B builders (intraday_snapshot, price_intraday_30s) remain exempt.
+
 ## 0.4.3 - 2026-05-28
 
 **`ReportTextNormalized` L1b payload schema**

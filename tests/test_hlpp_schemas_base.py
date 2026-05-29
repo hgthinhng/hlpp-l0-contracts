@@ -95,11 +95,11 @@ def test_normalized_payload_subclass_validates_price_daily():
         high=26.5,
         low=24.8,
         close=26.0,
-        close_adjusted=26.0,
+        close_adj=26.0,
         volume=1_000_000,
-        value=26_000_000.0,
+        value_traded=26_000_000.0,
     )
-    assert row.close_adjusted == 26.0
+    assert row.close_adj == 26.0
     assert row.adjustment_type == "backward_adjusted"
 
 def test_normalized_payload_subclasses_set_adjustment_type_defaults():
@@ -116,12 +116,12 @@ def test_normalized_payload_subclasses_set_adjustment_type_defaults():
 
     foreign_flow = ForeignFlowDaily(
         **dict(NORMALIZED_SAMPLE, dataset_id="foreign-flow-daily"),
-        buy_volume=1_000,
-        sell_volume=500,
-        buy_value=25_000_000.0,
-        sell_value=12_000_000.0,
-        net_volume=500,
-        net_value=13_000_000.0,
+        foreign_buy_volume=1_000,
+        foreign_sell_volume=500,
+        foreign_buy_value=25_000_000.0,
+        foreign_sell_value=12_000_000.0,
+        foreign_net_volume=500,
+        foreign_net_value=13_000_000.0,
     )
     assert foreign_flow.adjustment_type == "raw"
 
@@ -138,9 +138,9 @@ def test_normalized_payload_rejects_negative_volume():
             high=26.5,
             low=24.8,
             close=26.0,
-            close_adjusted=26.0,
+            close_adj=26.0,
             volume=-1,
-            value=26_000_000.0,
+            value_traded=26_000_000.0,
         )
 
 

@@ -29,7 +29,7 @@ jobs:
       - name: Install test dependencies
         run: |
           . .venv/bin/activate
-          pip install pytest pytest-cov ruff mypy pandas pandas-stubs
+          pip install pytest pytest-cov ruff mypy pandas pandas-stubs types-PyYAML
 
       - name: Run checks
         run: make all

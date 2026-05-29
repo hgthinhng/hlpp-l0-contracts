@@ -7,13 +7,17 @@ Per spec §9 classification (11 L1b datasets):
 - price-intraday-30s, price-daily, foreign-flow-daily, index-daily
 - block-deals, insider-trades, large-shareholders, corp-events-parsed
 - liquidity-filters-daily, fundamentals-quarterly, ticker-360
+
+Also includes:
+- fundamentals-annual  (surface-aware; 44 payload cols + nullable surface-specifics)
+- intraday-snapshot    (Tier-B; lite base — ADR-022 stamping intentionally omitted)
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .base import HlppNormalizedBase
 
@@ -31,42 +35,144 @@ class PriceIntraday30s(HlppNormalizedBase):
 
 
 class PriceDaily(HlppNormalizedBase):
-    """Daily OHLC + adjustments from vnstock VCI EOD."""
+    """Daily OHLC + adjustments from vnstock VCI EOD / FQX adjusted.
+
+    Field names match the stable builder output columns (v3.1+):
+    - ``close_adj``: split + dividend backward-adjusted close (was ``close_adjusted`` pre-v3.1)
+    - ``value_traded``: total session traded value in VND (was ``value`` pre-v3.1)
+    ``business_time`` from the base is irrelevant for daily bars and is left null.
+    """
 
     adjustment_type: Literal["backward_adjusted"] = "backward_adjusted"
     open: float = Field(..., ge=0)
     high: float = Field(..., ge=0)
     low: float = Field(..., ge=0)
     close: float = Field(..., ge=0)
-    close_adjusted: float = Field(..., ge=0, description="Split + dividend adjusted")
-    volume: int = Field(..., ge=0)
-    value: float = Field(..., ge=0)
+    close_adj: float = Field(..., ge=0, description="Split + dividend backward-adjusted close")
+    volume: float = Field(..., ge=0, description="Volume (float to accept FQX Float64 output)")
+    value_traded: float | None = Field(
+        None,
+        ge=0,
+        description=(
+            "Total session traded value (VND). "
+            "Null for vnstock-fallback rows (vendor does not provide value_traded); "
+            "non-null for FQX rows."
+        ),
+    )
 
 
 class ForeignFlowDaily(HlppNormalizedBase):
-    """Daily foreign buy/sell flow aggregate."""
+    """Daily foreign buy/sell flow aggregate.
+
+    Field names use the ``foreign_`` prefix matching the stable builder output columns
+    (silver_foreign_flow_daily _PAYLOAD_COLUMNS). The prefix distinguishes foreign-investor
+    flow from total-market flow and matches the FQX vendor field naming convention.
+    """
 
     adjustment_type: Literal["raw"] = "raw"
-    buy_volume: int = Field(..., ge=0)
-    sell_volume: int = Field(..., ge=0)
-    buy_value: float = Field(..., ge=0)
-    sell_value: float = Field(..., ge=0)
-    net_volume: int  # can be negative
-    net_value: float
+    foreign_buy_volume: float = Field(
+        ..., ge=0, description="Foreign buy volume (Float64; vendor emits float not int)"
+    )
+    foreign_sell_volume: float = Field(
+        ..., ge=0, description="Foreign sell volume (Float64; vendor emits float not int)"
+    )
+    foreign_buy_value: float = Field(..., ge=0)
+    foreign_sell_value: float = Field(..., ge=0)
+    foreign_net_volume: float | None = Field(
+        None,
+        description=(
+            "Foreign net volume (buy − sell). "
+            "Not present in all m12-fqx-foreign-flow-v1 feeds; null when absent."
+        ),
+    )
+    foreign_net_value: float
 
 
 class FundamentalsQuarterly(HlppNormalizedBase):
-    """Quarterly BCTC fundamentals — normalized 3 statements."""
+    """Quarterly BCTC fundamentals — surface-aware unified schema (5 surfaces).
 
-    fiscal_year: int = Field(..., ge=2000, le=2100)
-    fiscal_quarter: int = Field(..., ge=1, le=4)
-    revenue: float | None = None
-    net_income: float | None = None
+    Mirrors FundamentalsAnnual's 44-column surface-aware schema (see that class
+    for column-group documentation) but at quarterly granularity: ``period`` is a
+    quarter string (e.g. '2025-Q4') and ``tet_q1_seasonal_flag`` marks Q1 rows of
+    Tet-affected (FMCG/retail) issuers.
+
+    Source: 5 BCTC m12 contracts routed via ICB → surface mapping, quarterly periods.
+    PK: (ticker, period_end_date). Surface-specific columns are NULL for rows
+    belonging to other surfaces; ``bctc_surface`` indicates which group is populated.
+
+    REVISION (2026-05-29, Decision-A Task B / Wave 3): replaced the prior generic
+    stub (fiscal_year/fiscal_quarter/revenue/net_income/eps/book_value_per_share)
+    which was structurally incompatible with the surface-aware builder output.
+    """
+
+    adjustment_type: Literal["raw"] = "raw"
+
+    # Identity
+    period: str | None = Field(None, description="Fiscal quarter string e.g. '2025-Q4'")
+    period_end_date: date | None = Field(None, description="Fiscal quarter end date")
+    report_type: str | None = Field(None, description="'quarter' for quarterly rows")
+    accounting_framework: str | None = Field(None, description="e.g. VAS / IFRS")
+    bctc_surface: str = Field(
+        ...,
+        description="BCTC routing surface: general / bank / securities / insurance / fund",
+    )
+
+    # Universal (all 5 surfaces)
+    net_profit_after_tax: float | None = None
     total_assets: float | None = None
+    roe: float | None = None
+
+    # Common-4 (general/bank/securities/insurance; null for fund)
     total_equity: float | None = None
+    eps_basic: float | None = None
+    bvps: float | None = None
+    roa: float | None = None
+
+    # General-only
+    net_sales: float | None = None
+    gross_profit: float | None = None
+    operating_profit: float | None = None
     total_debt: float | None = None
-    eps: float | None = None
-    book_value_per_share: float | None = None
+    cash: float | None = None
+    operating_cash_flow: float | None = None
+    eps_diluted: float | None = None
+    pe_ratio: float | None = None
+    pb_ratio: float | None = None
+
+    # Bank-only
+    net_interest_income: float | None = None
+    loans_to_customers: float | None = None
+    deposits_from_customers: float | None = None
+    npl_ratio: float | None = None
+    capital_adequacy_ratio: float | None = None
+    tier1_capital_ratio: float | None = None
+    nim: float | None = None
+
+    # Securities-only
+    brokerage_revenue: float | None = None
+    proprietary_trading_pnl: float | None = None
+    margin_lending_interest_income: float | None = None
+    margin_loans_outstanding: float | None = None
+    trading_securities: float | None = None
+
+    # Insurance-only
+    gross_written_premium: float | None = None
+    net_written_premium: float | None = None
+    claims_incurred: float | None = None
+    combined_ratio: float | None = None
+    solvency_capital_ratio: float | None = None
+
+    # Fund-only
+    total_aum: float | None = None
+    total_nav: float | None = None
+    nav_per_unit: float | None = None
+    units_outstanding: float | None = None
+    expense_ratio: float | None = None
+
+    # Quarterly-specific
+    tet_q1_seasonal_flag: bool | None = Field(
+        None, description="True on Q1 rows of Tet-affected (FMCG/retail) issuers"
+    )
 
 
 class Ticker360(HlppNormalizedBase):
@@ -123,7 +229,13 @@ class ReportTextNormalized(HlppNormalizedBase):
     char_count: int = Field(..., ge=0)
     page_count: int = Field(..., ge=0, description="0 for HTML/summary inputs")
     content_hash: str = Field(
-        ..., description="sha256:HEX of body_text; '' when status != OK"
+        ...,
+        description=(
+            "Row-level provenance struct-hash (Utf8) set by stamp_silver_per_row. "
+            "NOT a sha256 of body_text — the column is overwritten by the stamping layer "
+            "with a polars struct-hash. If a content digest of body_text is needed, "
+            "add a separate field (e.g. body_text_sha256)."
+        ),
     )
     extracted_via: Literal["pdfplumber", "html_summary", "html_body"] = "pdfplumber"
     # Renamed from "status" to avoid collision with the silver-stamping
@@ -143,13 +255,334 @@ class ReportTextNormalized(HlppNormalizedBase):
     )
 
 
-# TODO: Add remaining 6 L1b payload classes during Phase 4 builder migration:
-# - BlockDeals, InsiderTrades, LargeShareholders, CorpEventsParsed,
-#   IndexDaily, LiquidityFiltersDaily
+# ---------------------------------------------------------------------------
+# Phase 0.5 additions — 8 missing L1b contract classes (2026-05-29)
+# ---------------------------------------------------------------------------
+
+
+class BlockDeals(HlppNormalizedBase):
+    """Per-ticker block trades and put-through events.
+
+    Source: m12-vnstock-block-trades-v1 via silver_block_deals builder.
+    PK: (ticker, trading_date, time, endpoint)
+    """
+
+    adjustment_type: Literal["raw"] = "raw"
+    trading_date: date = Field(..., description="Trade date (parsed from DD/MM/YYYY vendor format)")
+    time: str = Field(..., description="Trade time string as emitted by vnstock")
+    endpoint: str | None = Field(None, description="vnstock endpoint: block_trades or put_through")
+    exchange: str = Field(..., description="Exchange code e.g. HOSE/HNX")
+    match_price: float = Field(..., ge=0, description="Matched block price (VND)")
+    match_volume: int = Field(..., ge=0, description="Matched block volume (shares)")
+    reference_price: float | None = Field(None, ge=0, description="Reference price at time of trade")
+    floor_price: float | None = Field(None, ge=0, description="Floor price at time of trade")
+
+
+class InsiderTrades(HlppNormalizedBase):
+    """Insider trade events projected from silver_corp_events_parsed.
+
+    Source: silver_corp_events_parsed (event_type='INSIDER_TRADE') via silver_insider_trades.
+    PK: (ticker, event_date, event_type)
+
+    Note: richer per-transaction share volume / price data is a Wave-F backlog item
+    pending a dedicated m12-fqx-insider-deals collector.
+    """
+
+    adjustment_type: Literal["raw"] = "raw"
+    event_date: date = Field(..., description="Insider trade date (public_date precedence)")
+    event_type: Literal["INSIDER_TRADE"] = "INSIDER_TRADE"
+    event_title: str | None = Field(None, description="Vendor event title (Vietnamese text)")
+    vendor_event_label: str | None = Field(
+        None, description="Vendor full event_name (Vietnamese, verbatim audit trail)"
+    )
+    organ_name: str | None = Field(None, description="Insider / organisation name")
+    cash_amount_vnd: float | None = Field(
+        None, description="Transaction value in VND (null when not reported)"
+    )
+
+
+class LargeShareholders(HlppNormalizedBase):
+    """Latest snapshot of >=5% shareholders per ticker.
+
+    Source: m12-vnstock-shareholders-v1 via silver_large_shareholders builder.
+    PK: (symbol, name)
+
+    IMPORTANT: This builder uses ``symbol`` as the primary entity identifier
+    (not ``ticker``), matching the vnstock vendor convention for shareholder data.
+    The ``ticker`` field on HlppNormalizedBase is populated with the same uppercase
+    symbol value for contract consistency, but the dedicated ``symbol`` payload
+    column is the canonical key downstream consumers use.
+    """
+
+    adjustment_type: Literal["raw"] = "raw"
+    # Vendor uses 'symbol' (not 'ticker') as primary key — preserve verbatim.
+    # See audit §5.4: large_shareholders diverges from all other builders here.
+    symbol: str = Field(
+        ..., description="Shareholder's associated ticker symbol (vnstock convention)"
+    )
+    name: str = Field(..., description="Shareholder name (individual or entity)")
+    total_shares: int = Field(..., ge=0, description="Total shares held")
+    rate: float = Field(..., ge=0, le=1, description="Ownership rate as decimal (0–1)")
+    snapshot_date: date = Field(
+        ..., description="Date of the shareholder snapshot (latest available)"
+    )
+
+
+class CorpEventsParsed(HlppNormalizedBase):
+    """Wide per-event parsed silver for all corporate action types.
+
+    Source: m12-vnstock-corp-actions-calendar-v1 via silver_corp_events_parsed builder.
+    PK: (ticker, event_date, event_type)
+
+    event_type is normalized from vendor short-codes via Appendix A mapping
+    (DIV→DIVIDEND_CASH, AGME→AGM, etc.). See builder for full mapping.
+    """
+
+    adjustment_type: Literal["raw"] = "raw"
+    event_date: date | None = Field(
+        None,
+        description=(
+            "Resolved event date via per-event-type precedence rules. "
+            "Null when all vendor date fields are missing/unparseable (DEGRADED row); "
+            "business_date is set to as_of_date in that case."
+        ),
+    )
+    event_type: str = Field(
+        ...,
+        description=(
+            "Normalized silver enum: DIVIDEND_CASH / AGM / EGM / SHARE_ISSUE / "
+            "LISTING / DELISTING / INSIDER_TRADE / OTHER"
+        ),
+    )
+    vendor_event_label: str | None = Field(
+        None, description="Vendor event_name (Vietnamese full-text, verbatim audit trail)"
+    )
+    vendor_event_type_code: str | None = Field(
+        None, description="Vendor short-code e.g. DIV, AGME (preserved for cross-reference)"
+    )
+    vendor_symbol: str | None = Field(None, description="Vendor's raw symbol field")
+    event_title: str | None = Field(None, description="Vendor event_title field")
+    organ_name: str | None = Field(None, description="Organiser / counterparty name")
+    cash_amount_vnd: float | None = Field(
+        None, description="Cash dividend or transaction value in VND"
+    )
+    stock_ratio_decimal: float | None = Field(
+        None, ge=0, description="Stock dividend / bonus-share ratio as decimal"
+    )
+    # Date passthroughs from vendor (all nullable; semantics vary by event_type)
+    ex_right_date: date | None = None
+    record_date: date | None = None
+    payout_date: date | None = None
+    public_date: date | None = None
+    issue_date: date | None = None
+
+
+class IndexDaily(HlppNormalizedBase):
+    """Daily OHLCV bars for VN indices derived from intraday stream.
+
+    Source: m12-fqx-index-intraday-v1 via silver_index_daily builder.
+    PK: (ticker, business_date)
+    ticker is the index identifier: VNINDEX / VN30 / HNX30 / HNXINDEX / UPCOMINDEX.
+    """
+
+    adjustment_type: Literal["raw"] = "raw"
+    open: float = Field(..., ge=0, description="Session open price")
+    high: float = Field(..., ge=0, description="Session high price")
+    low: float = Field(..., ge=0, description="Session low price")
+    close: float = Field(..., ge=0, description="Session close price")
+    volume: float = Field(..., ge=0, description="Total session volume (float; summed from ticks)")
+    value_traded: float = Field(..., ge=0, description="Total session traded value (VND)")
+
+
+class LiquidityFiltersDaily(HlppNormalizedBase):
+    """Rolling ADTV liquidity filter flags per ticker/date.
+
+    Source: silver_price_daily via silver_liquidity_filters_daily builder.
+    PK: (ticker, business_date)
+    Includes M23 lineage columns (source_silver_set, derivation_recipe_id,
+    pit_lineage, source_code_shas, recipe_version, expected_output_schema_id)
+    in the parquet output beyond the contract payload fields below.
+    """
+
+    adjustment_type: Literal["raw"] = "raw"
+    adtv_20d_vnd: float | None = Field(
+        None, ge=0, description="20-day average daily traded value in VND; null if < 20 days data"
+    )
+    adtv_60d_vnd: float | None = Field(
+        None, ge=0, description="60-day average daily traded value in VND; null if < 60 days data"
+    )
+    passes_min_adtv_20d_flag: bool | None = Field(
+        None,
+        description=(
+            "True if adtv_20d_vnd >= min_adtv threshold; "
+            "null when adtv_20d_vnd is null (insufficient history)"
+        ),
+    )
+    passes_min_adtv_60d_flag: bool | None = Field(
+        None,
+        description=(
+            "True if adtv_60d_vnd >= min_adtv threshold; "
+            "null when adtv_60d_vnd is null (insufficient history)"
+        ),
+    )
+
+
+class FundamentalsAnnual(HlppNormalizedBase):
+    """Annual BCTC fundamentals — surface-aware unified schema (5 surfaces).
+
+    Source: 5 BCTC m12 contracts routed via ICB → surface mapping.
+    PK: (ticker, period_end_date)
+
+    Surface routing: general / bank / securities / insurance / fund.
+    All 5 surfaces share the same 44-column parquet schema; surface-specific
+    columns are NULL for rows belonging to other surfaces. The ``bctc_surface``
+    field indicates which surface's columns are populated.
+
+    Column groups:
+    - Identity (6):       ticker, period, period_end_date, report_type,
+                          accounting_framework, bctc_surface
+    - Universal (3):      net_profit_after_tax, total_assets, roe
+    - Common-4 (4):       total_equity, eps_basic, bvps, roa
+                          (null for fund surface)
+    - General-only (9):   net_sales, gross_profit, operating_profit, total_debt,
+                          cash, operating_cash_flow, eps_diluted, pe_ratio, pb_ratio
+    - Bank-only (7):      net_interest_income, loans_to_customers,
+                          deposits_from_customers, npl_ratio, capital_adequacy_ratio,
+                          tier1_capital_ratio, nim
+    - Securities-only (5): brokerage_revenue, proprietary_trading_pnl,
+                           margin_lending_interest_income, margin_loans_outstanding,
+                           trading_securities
+    - Insurance-only (5): gross_written_premium, net_written_premium,
+                          claims_incurred, combined_ratio, solvency_capital_ratio
+    - Fund-only (5):      total_aum, total_nav, nav_per_unit, units_outstanding,
+                          expense_ratio
+    """
+
+    adjustment_type: Literal["raw"] = "raw"
+
+    # Identity
+    period: str | None = Field(None, description="Fiscal year string e.g. '2025'")
+    period_end_date: date | None = Field(None, description="Fiscal year end date")
+    report_type: str | None = Field(
+        None, description="'year' for annual rows (quarterly Q4 rows excluded)"
+    )
+    accounting_framework: str | None = Field(None, description="e.g. VAS / IFRS")
+    bctc_surface: str = Field(
+        ...,
+        description="BCTC routing surface: general / bank / securities / insurance / fund",
+    )
+
+    # Universal (all 5 surfaces)
+    net_profit_after_tax: float | None = None
+    total_assets: float | None = None
+    roe: float | None = None
+
+    # Common-4 (general/bank/securities/insurance; null for fund)
+    total_equity: float | None = None
+    eps_basic: float | None = None
+    bvps: float | None = None
+    roa: float | None = None
+
+    # General-only
+    net_sales: float | None = None
+    gross_profit: float | None = None
+    operating_profit: float | None = None
+    total_debt: float | None = None
+    cash: float | None = None
+    operating_cash_flow: float | None = None
+    eps_diluted: float | None = None
+    pe_ratio: float | None = None
+    pb_ratio: float | None = None
+
+    # Bank-only
+    net_interest_income: float | None = None
+    loans_to_customers: float | None = None
+    deposits_from_customers: float | None = None
+    npl_ratio: float | None = None
+    capital_adequacy_ratio: float | None = None
+    tier1_capital_ratio: float | None = None
+    nim: float | None = None
+
+    # Securities-only
+    brokerage_revenue: float | None = None
+    proprietary_trading_pnl: float | None = None
+    margin_lending_interest_income: float | None = None
+    margin_loans_outstanding: float | None = None
+    trading_securities: float | None = None
+
+    # Insurance-only
+    gross_written_premium: float | None = None
+    net_written_premium: float | None = None
+    claims_incurred: float | None = None
+    combined_ratio: float | None = None
+    solvency_capital_ratio: float | None = None
+
+    # Fund-only
+    total_aum: float | None = None
+    total_nav: float | None = None
+    nav_per_unit: float | None = None
+    units_outstanding: float | None = None
+    expense_ratio: float | None = None
+
+
+# ---------------------------------------------------------------------------
+# Tier-B lite base — for real-time snapshots that intentionally skip ADR-022
+# ---------------------------------------------------------------------------
+
+class _HlppTierBBase(BaseModel):
+    """Lite base for Tier-B real-time datasets that intentionally skip ADR-022 stamping.
+
+    Tier-B builders (intraday_snapshot, price_intraday_30s) are best-effort,
+    current-only, and not journaled into M23 lineage per operator directive.
+    They omit the 4 mandatory HlppNormalizedBase provenance fields
+    (vendor, schema_id, dataset_id, builder_version) because those require
+    the full stamp_silver_shared_provenance pass that Tier-B explicitly skips.
+
+    If a builder graduates from Tier-B to full ADR-022 compliance, migrate it
+    to subclass HlppNormalizedBase instead.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    ticker: str = Field(..., description="Uppercase, vendor-canonical")
+    as_of_date: date = Field(..., description="Partition key (build date)")
+
+
+class IntradaySnapshot(_HlppTierBBase):
+    """Best-effort per-ticker daily intraday snapshot (Tier-B, no ADR-022 stamping).
+
+    Source: daemon-written tick parquet under ~/data/m12/fqx/{ticker}/dt={date}/*.parquet
+    via silver_intraday_snapshot builder.
+    PK: (ticker, as_of_date) — one row per ticker per day.
+
+    TIER-B EXEMPTION: vendor, schema_id, dataset_id, builder_version are intentionally
+    absent. This builder is current_only and best-effort; partial-universe output is
+    acceptable. See builder docstring for rationale.
+    """
+
+    last_event_ts: datetime = Field(
+        ..., description="UTC timestamp of the latest tick observed today"
+    )
+    last_price: float = Field(..., ge=0, description="Close of the latest tick (~current price)")
+    day_open: float = Field(..., ge=0, description="Open of the first tick in the session")
+    day_high: float = Field(..., ge=0, description="Running session high")
+    day_low: float = Field(..., ge=0, description="Running session low")
+    day_close: float = Field(..., ge=0, description="Alias for last_price (for downstream readers)")
+    day_volume: float = Field(..., ge=0, description="Cumulative tick volume")
+    day_value_vnd: float = Field(..., ge=0, description="Cumulative tick traded value (VND)")
+
 
 __all__ = [
+    "BlockDeals",
+    "CorpEventsParsed",
     "ForeignFlowDaily",
+    "FundamentalsAnnual",
     "FundamentalsQuarterly",
+    "IndexDaily",
+    "InsiderTrades",
+    "IntradaySnapshot",
+    "LargeShareholders",
+    "LiquidityFiltersDaily",
     "PriceDaily",
     "PriceIntraday30s",
     "ReportTextNormalized",
