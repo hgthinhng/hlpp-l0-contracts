@@ -1,4 +1,4 @@
-"""Public API for HLPP L0 Contracts (renamed from ht-l1-core 2026-05-20 v0.2.0).
+"""Public API for HLPP L0 Contracts (renamed from hlpp-l0-contracts 2026-05-20 v0.2.0).
 
 NEW v0.2.0+ HLPP modules:
 - schemas/   — Pydantic models for HLPP-NORMALIZED + HLPP-COMPUTED (spec §7-§8)
@@ -6,7 +6,7 @@ NEW v0.2.0+ HLPP modules:
 - validators — validate_normalized() / validate_computed() gate before parquet write
 - git_meta   — git_commit_hash() auto-inject for builder_version/analysis_version
 
-LEGACY (kept from ht-l1-core 0.1.x):
+LEGACY (kept from hlpp_l0_contracts 0.1.x):
 collector, llm, schema (CrawlerBase), protocols, browser_fetch, http,
 idempotency, stamping, sources_config, backfillable, source_status.
 """

@@ -8,8 +8,7 @@ pre-write parquet validators, git metadata helpers, plus the legacy collector / 
 LLM / idempotency primitives inherited from the v0.1.x era.
 
 > **Rename note (v0.2.0):** This package was renamed from `ht-l1-core` →
-> `hlpp-l0-contracts`. The old import path `ht_l1_core` still works via a backward-compat
-> shim that emits `DeprecationWarning`; it will be removed in Phase 8b.
+> `hlpp-l0-contracts`. The backward-compat shim (`ht_l1_core`) has been removed.
 
 ## Installation
 
@@ -30,11 +29,11 @@ pip install -e .
 | `hlpp_l0_contracts.validators` | `validate_normalized(df, dataset_id=...)` + `validate_computed(df, dataset_id=..., chain_depth=..., domain=...)` — gate parquet writes; raise `SchemaValidationError`. |
 | `hlpp_l0_contracts.git_meta` | `git_commit_hash()` + `git_dirty()` — auto-inject `builder_version` / `analysis_version` (avoid manual semver bumps). |
 
-### Legacy primitives (from ht-l1-core 0.1.x)
+### Legacy primitives (from hlpp-l0-contracts 0.1.x)
 
 | Module | Summary |
 |---|---|
-| `hlpp_l0_contracts.browser_fetch` | `BrowserFetchClient` — sync typed client for the ht-browser-fetch L0 rendering service. Exposes `render()`, `health()`, `render_html()`, `render_json()`. Loud-fail error hierarchy; built-in 429 retry. |
+| `hlpp_l0_contracts.browser_fetch` | `BrowserFetchClient` — sync typed client for the hlpp-l0-browser L0 rendering service. Exposes `render()`, `health()`, `render_html()`, `render_json()`. Loud-fail error hierarchy; built-in 429 retry. |
 | `hlpp_l0_contracts.collector.base` | `BaseCollector` abstract base with `RawArticle` rows and auto-stamped provenance/lineage/vintage fields. |
 | `hlpp_l0_contracts.http` | `HttpClient` wrapper with retry on 429/5xx and `Retry-After` support. |
 | `hlpp_l0_contracts.idempotency` | `sha256_url` and `idempotent_insert` for SQLite/PostgreSQL. |

@@ -67,9 +67,8 @@
 **HLPP rebrand + foundation contracts**
 
 - **BREAKING (soft):** Package renamed `ht-l1-core` → `hlpp-l0-contracts`. Old import path
-  `ht_l1_core` still works via a backward-compat shim under `src/ht_l1_core/__init__.py`
-  that re-exports `hlpp_l0_contracts` and emits a `DeprecationWarning`. Shim will be
-  removed in Phase 8b once all downstream repos cut over.
+  `ht_l1_core` was supported via a backward-compat shim (removed in Phase 8b / v0.5.5+).
+  Use `hlpp_l0_contracts` directly.
 - **GitHub:** repo renamed `hgthinhng/ht-l1-core` → `hgthinhng/hlpp-l0-contracts` (PUBLIC,
   old URL auto-redirects 90 days). Git remote updated; module imports mass find/replaced
   across src/, tests/, docs/, pyproject.toml, README, CHANGELOG, Makefile.
@@ -136,7 +135,7 @@
 
 ## 0.1.6 - 2026-05-10
 
-- Added `BrowserFetchClient` — sync typed client for the ht-browser-fetch L0 headless-Chromium
+- Added `BrowserFetchClient` — sync typed client for the hlpp-l0-browser L0 headless-Chromium
   rendering service (ADR-019). Includes `RenderResult`, `HealthResult`, `Cookie` dataclasses
   and a full loud-fail error hierarchy (`BrowserFetchUnavailable`, `BrowserFetchAuthError`,
   `BrowserFetchTimeoutError`, `BrowserFetchBadRequest`, `BrowserFetchUpstreamFailed`,

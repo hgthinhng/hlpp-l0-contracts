@@ -1,24 +1,24 @@
-"""BrowserFetchClient — sync HTTP client for the ht-browser-fetch L0 service.
+"""BrowserFetchClient — sync HTTP client for the hlpp-l0-browser L0 service.
 
 Provides typed access to ``POST /render`` and ``GET /health`` on the
-ht-browser-fetch headless-Chromium rendering service (ADR-019).
+hlpp-l0-browser headless-Chromium rendering service (ADR-019).
 
 Usage::
 
     from hlpp_l0_contracts import BrowserFetchClient
 
-    client = BrowserFetchClient()          # picks up HT_BROWSER_FETCH_URL / HT_BROWSER_FETCH_TOKEN from env
+    client = BrowserFetchClient()          # picks up HLPP_BROWSER_FETCH_URL / HLPP_BROWSER_FETCH_TOKEN from env
     result = client.render("https://data.hnx.vn/...", wait_for="networkidle")
     print(result.rendered_html)
 
 Base-URL resolution (first wins):
   1. Explicit ``base_url`` constructor argument
-  2. ``HT_BROWSER_FETCH_URL`` environment variable
+  2. ``HLPP_BROWSER_FETCH_URL`` environment variable (fallback: ``HT_BROWSER_FETCH_URL``)
   3. Default ``http://localhost:18766``
 
 Bearer-token resolution (first wins):
   1. Explicit ``bearer_token`` constructor argument
-  2. ``HT_BROWSER_FETCH_TOKEN`` environment variable
+  2. ``HLPP_BROWSER_FETCH_TOKEN`` environment variable (fallback: ``HT_BROWSER_FETCH_TOKEN``)
   3. None (no auth — local dev default)
 
 Sync API only for v0.1.7. Async client deferred to v0.1.8+. If a future
@@ -56,7 +56,7 @@ import httpx
 
 
 class BrowserFetchError(Exception):
-    """Base exception for all ht-browser-fetch client errors.
+    """Base exception for all hlpp-l0-browser client errors.
 
     All specific sub-exceptions inherit from this so consumers can catch
     ``BrowserFetchError`` as a broad handler, or a specific sub-class for
@@ -88,7 +88,7 @@ class BrowserFetchError(Exception):
 class BrowserFetchUnavailable(BrowserFetchError):
     """Service unreachable: connection refused, DNS failure, 503, or health-check failure.
 
-    This is an *infrastructure* error — the ht-browser-fetch service itself is
+    This is an *infrastructure* error — the hlpp-l0-browser service itself is
     not reachable or not ready, not a problem with the target URL.
     """
 
@@ -96,8 +96,8 @@ class BrowserFetchUnavailable(BrowserFetchError):
 class BrowserFetchAuthError(BrowserFetchError):
     """401 or 403 from service — missing or wrong bearer token.
 
-    Set ``HT_BROWSER_FETCH_TOKEN`` env var or pass ``bearer_token`` to the
-    constructor.
+    Set ``HLPP_BROWSER_FETCH_TOKEN`` env var (or legacy ``HT_BROWSER_FETCH_TOKEN``)
+    or pass ``bearer_token`` to the constructor.
     """
 
 
@@ -229,7 +229,7 @@ class RenderResult:
     - ``return_mode="both"``  → both are populated
 
     ``upstream_http_code`` is the HTTP status returned by the *target site*
-    (e.g. 200, 404), NOT the ht-browser-fetch service's own status code.
+    (e.g. 200, 404), NOT the hlpp-l0-browser service's own status code.
 
     ``extracted_json`` is ``list[dict[str, Any]]`` with no further schema —
     the service extracts JSON from ``<script type="application/ld+json">`` and
@@ -267,7 +267,7 @@ class HealthResult:
 
 #: Default client-side HTTP timeout in seconds.
 #:
-#: The ht-browser-fetch service can legally spend up to::
+#: The hlpp-l0-browser service can legally spend up to::
 #:
 #:   QUEUE_TIMEOUT_MS (default 10 000 ms)   — wait for a free pool slot
 #:   + MAX_RENDER_MS  (default 30 000 ms)   — actual Playwright render
@@ -289,7 +289,7 @@ _POOL_TIMEOUT_BACKOFF_CAP = 8.0
 
 
 class BrowserFetchClient:
-    """Sync HTTP client for the ht-browser-fetch L0 rendering service.
+    """Sync HTTP client for the hlpp-l0-browser L0 rendering service.
 
     Thread-safety: instances share a single ``httpx.Client`` (connection pool).
     Do not share a single instance across threads without external locking.
@@ -330,12 +330,17 @@ class BrowserFetchClient:
     ) -> None:
         resolved_url = (
             base_url
+            or os.environ.get("HLPP_BROWSER_FETCH_URL")
             or os.environ.get("HT_BROWSER_FETCH_URL")
             or _DEFAULT_BASE_URL
         )
         self._base_url: str = resolved_url.rstrip("/")
 
-        resolved_token = bearer_token or os.environ.get("HT_BROWSER_FETCH_TOKEN")
+        resolved_token = (
+            bearer_token
+            or os.environ.get("HLPP_BROWSER_FETCH_TOKEN")
+            or os.environ.get("HT_BROWSER_FETCH_TOKEN")
+        )
         self._timeout = timeout
 
         headers: dict[str, str] = {"Content-Type": "application/json"}
@@ -514,21 +519,21 @@ class BrowserFetchClient:
             ) from exc
         except httpx.ConnectError as exc:
             raise BrowserFetchUnavailable(
-                f"Cannot connect to ht-browser-fetch at {request_url}: {exc}",
+                f"Cannot connect to hlpp-l0-browser at {request_url}: {exc}",
                 request_url=request_url,
             ) from exc
 
         if response.status_code == 503:
             body = _safe_json(response)
             raise BrowserFetchUnavailable(
-                "ht-browser-fetch health check returned 503 — service not ready",
+                "hlpp-l0-browser health check returned 503 — service not ready",
                 http_code=503,
                 service_message=body.get("error_message", ""),
                 request_url=request_url,
             )
         if not response.is_success:
             raise BrowserFetchUnavailable(
-                f"ht-browser-fetch health check returned unexpected {response.status_code}",
+                f"hlpp-l0-browser health check returned unexpected {response.status_code}",
                 http_code=response.status_code,
                 request_url=request_url,
             )
@@ -576,14 +581,14 @@ class BrowserFetchClient:
                 ) from exc
             except httpx.ConnectError as exc:
                 raise BrowserFetchUnavailable(
-                    f"Cannot connect to ht-browser-fetch at {request_url}: {exc}",
+                    f"Cannot connect to hlpp-l0-browser at {request_url}: {exc}",
                     request_url=request_url,
                 ) from exc
 
             if response.status_code == 429:
                 error_body = _safe_json(response)
                 last_exc = BrowserFetchPoolTimeout(
-                    f"ht-browser-fetch pool exhausted (attempt {attempt + 1}/"
+                    f"hlpp-l0-browser pool exhausted (attempt {attempt + 1}/"
                     f"{_POOL_TIMEOUT_RETRY_ATTEMPTS}): "
                     f"{error_body.get('error_message', 'POOL_EXHAUSTED_QUEUE_TIMEOUT')}",
                     http_code=429,
@@ -630,7 +635,7 @@ class BrowserFetchClient:
 
         if code in (401, 403):
             raise BrowserFetchAuthError(
-                f"ht-browser-fetch auth error {code}: {error_message}",
+                f"hlpp-l0-browser auth error {code}: {error_message}",
                 http_code=code,
                 service_message=error_message,
                 request_url=request_url,
@@ -639,7 +644,7 @@ class BrowserFetchClient:
 
         if code == 400:
             raise BrowserFetchBadRequest(
-                f"ht-browser-fetch bad request ({error_code}): {error_message}",
+                f"hlpp-l0-browser bad request ({error_code}): {error_message}",
                 http_code=code,
                 service_message=error_message,
                 request_url=request_url,
@@ -650,7 +655,7 @@ class BrowserFetchClient:
         if code == 502:
             upstream_http_code: int | None = error_body.get("http_code")
             raise BrowserFetchUpstreamFailed(
-                f"ht-browser-fetch upstream failed ({upstream_http_code}): {error_message}",
+                f"hlpp-l0-browser upstream failed ({upstream_http_code}): {error_message}",
                 http_code=code,
                 service_message=error_message,
                 request_url=request_url,
@@ -660,7 +665,7 @@ class BrowserFetchClient:
 
         if code == 503:
             raise BrowserFetchUnavailable(
-                f"ht-browser-fetch returned 503 — not ready: {error_message}",
+                f"hlpp-l0-browser returned 503 — not ready: {error_message}",
                 http_code=503,
                 service_message=error_message,
                 request_url=request_url,
@@ -669,7 +674,7 @@ class BrowserFetchClient:
 
         # 500, 504, and anything else unexpected
         raise BrowserFetchServerError(
-            f"ht-browser-fetch server error {code} ({error_code}): {error_message}",
+            f"hlpp-l0-browser server error {code} ({error_code}): {error_message}",
             http_code=code,
             service_message=error_message,
             request_url=request_url,
