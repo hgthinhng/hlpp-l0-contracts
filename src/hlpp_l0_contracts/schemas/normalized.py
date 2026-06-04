@@ -49,7 +49,7 @@ class PriceDaily(HlppNormalizedBase):
     low: float = Field(..., ge=0)
     close: float = Field(..., ge=0)
     close_adj: float = Field(..., ge=0, description="Split + dividend backward-adjusted close")
-    volume: float = Field(..., ge=0, description="Volume (float to accept FQX Float64 output)")
+    volume: int = Field(..., ge=0, description="Volume (canonical Int64; builder casts Float64 vendor output to int before validation)")
     value_traded: float | None = Field(
         None,
         ge=0,
