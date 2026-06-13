@@ -161,6 +161,10 @@ class FundamentalsQuarterly(HlppNormalizedBase):
     capital_adequacy_ratio: float | None = None
     tier1_capital_ratio: float | None = None
     nim: float | None = None
+    # Bank Wave-4 income-statement line-items (RE-contagion / PPOP / pre-provision)
+    loan_loss_reserves: float | None = None
+    operating_expenses: float | None = None
+    operating_income: float | None = None
 
     # Securities-only
     brokerage_revenue: float | None = None
@@ -530,6 +534,10 @@ class FundamentalsAnnual(HlppNormalizedBase):
     capital_adequacy_ratio: float | None = None
     tier1_capital_ratio: float | None = None
     nim: float | None = None
+    # Bank Wave-4 income-statement line-items (RE-contagion / PPOP / pre-provision)
+    loan_loss_reserves: float | None = None
+    operating_expenses: float | None = None
+    operating_income: float | None = None
 
     # Securities-only
     brokerage_revenue: float | None = None
