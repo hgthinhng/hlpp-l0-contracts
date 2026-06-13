@@ -148,6 +148,10 @@ class FundamentalsQuarterly(HlppNormalizedBase):
     selling_expenses: float | None = None
     general_admin_expenses: float | None = None
     depreciation_amortization: float | None = None
+    cost_of_sales: float | None = None
+    inventory: float | None = None
+    accounts_payable: float | None = None
+    short_term_investments: float | None = None
 
     # Bank-only
     net_interest_income: float | None = None
@@ -513,6 +517,10 @@ class FundamentalsAnnual(HlppNormalizedBase):
     selling_expenses: float | None = None
     general_admin_expenses: float | None = None
     depreciation_amortization: float | None = None
+    cost_of_sales: float | None = None
+    inventory: float | None = None
+    accounts_payable: float | None = None
+    short_term_investments: float | None = None
 
     # Bank-only
     net_interest_income: float | None = None
