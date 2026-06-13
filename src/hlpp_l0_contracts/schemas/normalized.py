@@ -139,6 +139,16 @@ class FundamentalsQuarterly(HlppNormalizedBase):
     pe_ratio: float | None = None
     pb_ratio: float | None = None
 
+    # General-only forensic/credit line-items (Altman EMS, Beneish M, DuPont-5)
+    retained_earnings: float | None = None
+    fixed_assets: float | None = None
+    current_assets: float | None = None
+    current_liabilities: float | None = None
+    profit_before_tax: float | None = None
+    selling_expenses: float | None = None
+    general_admin_expenses: float | None = None
+    depreciation_amortization: float | None = None
+
     # Bank-only
     net_interest_income: float | None = None
     loans_to_customers: float | None = None
@@ -493,6 +503,16 @@ class FundamentalsAnnual(HlppNormalizedBase):
     eps_diluted: float | None = None
     pe_ratio: float | None = None
     pb_ratio: float | None = None
+
+    # General-only forensic/credit line-items (Altman EMS, Beneish M, DuPont-5)
+    retained_earnings: float | None = None
+    fixed_assets: float | None = None
+    current_assets: float | None = None
+    current_liabilities: float | None = None
+    profit_before_tax: float | None = None
+    selling_expenses: float | None = None
+    general_admin_expenses: float | None = None
+    depreciation_amortization: float | None = None
 
     # Bank-only
     net_interest_income: float | None = None
