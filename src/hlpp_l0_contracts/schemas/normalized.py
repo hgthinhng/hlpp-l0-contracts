@@ -165,6 +165,9 @@ class FundamentalsQuarterly(HlppNormalizedBase):
     loan_loss_reserves: float | None = None
     operating_expenses: float | None = None
     operating_income: float | None = None
+    # Bank Wave-4 NIM-decomposition: gross interest income/expense (P2.6)
+    interest_income: float | None = None
+    interest_expense: float | None = None
 
     # Securities-only
     brokerage_revenue: float | None = None
@@ -538,6 +541,9 @@ class FundamentalsAnnual(HlppNormalizedBase):
     loan_loss_reserves: float | None = None
     operating_expenses: float | None = None
     operating_income: float | None = None
+    # Bank Wave-4 NIM-decomposition: gross interest income/expense (P2.6)
+    interest_income: float | None = None
+    interest_expense: float | None = None
 
     # Securities-only
     brokerage_revenue: float | None = None
